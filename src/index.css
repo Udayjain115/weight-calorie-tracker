@@ -3842,3 +3842,215 @@ video {
     min-height: 0;
   }
 }
+
+/* Final mobile workout layout: keep desktop untouched, make exercise names readable */
+@media (max-width: 680px) {
+  .workout-flow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .workout-flow > .panel-title,
+  .workout-flow > .form-grid,
+  .workout-flow > .exercise-stepper,
+  .workout-flow > .exercise-context,
+  .workout-flow > .set-header,
+  .workout-flow > .set-list,
+  .workout-flow > .actions,
+  .workout-flow > .inline-help,
+  .workout-flow > .check-row,
+  .workout-flow > .full-input {
+    grid-column: 1;
+  }
+
+  .exercise-stepper {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "title title"
+      "previous next";
+    gap: 10px;
+    align-items: stretch;
+    border-radius: 22px;
+    padding: 12px;
+    background: rgba(255, 253, 247, 0.78);
+  }
+
+  .exercise-stepper > div {
+    grid-area: title;
+    min-width: 0;
+    min-height: 0;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(23, 25, 21, 0.055);
+    padding: 16px;
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+    text-align: left;
+  }
+
+  .exercise-stepper span {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    line-height: 1.15;
+    text-transform: uppercase;
+  }
+
+  .exercise-stepper strong {
+    max-width: 100%;
+    color: var(--ink);
+    font-size: clamp(1.25rem, 6.3vw, 2rem);
+    line-height: 1.02;
+    text-align: left;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .exercise-stepper button {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 12px;
+    gap: 7px;
+    font-size: 0.86rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .exercise-stepper button:first-child {
+    grid-area: previous;
+  }
+
+  .exercise-stepper button:last-child {
+    grid-area: next;
+  }
+
+  .exercise-stepper button svg {
+    flex: 0 0 auto;
+  }
+
+  .actions button {
+    width: 100%;
+    min-height: 48px;
+    height: auto;
+    line-height: 1.18;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .actions button svg {
+    flex: 0 0 auto;
+  }
+
+  .exercise-context {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .comparison-card {
+    min-height: 0;
+  }
+
+  .exercise-tags {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .exercise-tags .exercise-chip {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 16px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 6px 8px 12px;
+    line-height: 1.22;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .exercise-chip button {
+    flex: 0 0 30px;
+  }
+}
+
+@media (max-width: 390px) {
+  .exercise-stepper {
+    padding: 10px;
+  }
+
+  .exercise-stepper > div {
+    padding: 14px;
+  }
+
+  .exercise-stepper strong {
+    font-size: clamp(1.1rem, 6vw, 1.65rem);
+  }
+}
+
+/* Final phone nav: no horizontal scroll for Dashboard/Workout/Weight/Splits/Settings */
+@media (max-width: 680px) {
+  #main-content {
+    gap: 12px;
+  }
+
+  .tabs {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 0 10px;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 4px;
+    overflow: visible;
+    border-radius: 18px;
+  }
+
+  .tabs button {
+    min-width: 0;
+    min-height: 48px;
+    border-radius: 14px;
+    padding: 4px 2px;
+    display: grid;
+    grid-template-rows: 18px auto;
+    place-items: center;
+    gap: 3px;
+    font-size: 0.62rem;
+    line-height: 1;
+  }
+
+  .tabs button svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .tabs button span {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 370px) {
+  .tabs {
+    gap: 3px;
+    padding: 4px;
+  }
+
+  .tabs button {
+    min-height: 44px;
+    font-size: 0.56rem;
+  }
+
+  .tabs button svg {
+    width: 16px;
+    height: 16px;
+  }
+}

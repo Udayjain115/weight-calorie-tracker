@@ -66,6 +66,18 @@ function App() {
   }, [activeTab, isLiftOnly]);
 
   useEffect(() => {
+    if (state.splits.some((split) => split.id === workoutEntry.splitId)) return;
+    const fallbackSplit = state.splits[0];
+    if (!fallbackSplit) return;
+
+    setWorkoutEntry((entry) => ({
+      ...entry,
+      splitId: fallbackSplit.id,
+      sets: [newWorkoutSet(exerciseName(fallbackSplit.exercises[0]) || commonExercises[0])],
+    }));
+  }, [state.splits, workoutEntry.splitId]);
+
+  useEffect(() => {
     if (!session?.token) return;
 
     let mounted = true;
@@ -394,7 +406,8 @@ function App() {
   }
 
   function selectedSplitExercises() {
-    return state.splits.find((split) => split.id === workoutEntry.splitId)?.exercises.map(exerciseName) || allExercises;
+    const selectedSplit = state.splits.find((split) => split.id === workoutEntry.splitId) || state.splits[0];
+    return selectedSplit?.exercises.map(exerciseName) || [];
   }
 
   if (!session?.token) {
