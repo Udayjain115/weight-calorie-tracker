@@ -1,4 +1,5 @@
 const TOKEN_KEY = 'strength-calories-session-v1';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 export function loadSession() {
   try {
@@ -49,7 +50,7 @@ export async function saveTrackerState(state, token) {
 async function apiRequest(path, options = {}) {
   let response;
   try {
-    response = await fetch(path, {
+    response = await fetch(`${API_BASE_URL}${path}`, {
       method: options.method || 'GET',
       headers: {
         'Content-Type': 'application/json',

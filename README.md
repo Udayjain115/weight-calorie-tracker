@@ -137,7 +137,7 @@ npm run dev
 
 `npm run dev` starts both the Express API and Vite web app. Open the local network URL Vite prints to use it from your phone on the same Wi-Fi.
 
-## Deploy To Netlify
+## Deploy Frontend To Netlify
 
 Use these settings:
 
@@ -145,3 +145,27 @@ Use these settings:
 - Publish directory: `dist`
 
 The included `netlify.toml` already sets those defaults.
+
+Netlify deploys the React frontend. It does not run the Express API in `server/index.js` with the current static setup.
+
+## Deploy Backend API
+
+Deploy the Express API to a Node host such as Render, Railway, Fly.io, or a similar service.
+
+Use these backend settings:
+
+- Build command: `npm install`
+- Start command: `npm run start:api`
+- Required environment variables:
+  - `MONGODB_URI`
+  - `JWT_SECRET`
+  - `MONGODB_DB`
+  - `CORS_ORIGIN=https://your-netlify-site.netlify.app`
+
+After the backend is deployed, add this environment variable to Netlify and redeploy the frontend:
+
+```bash
+VITE_API_URL=https://your-backend-url.example.com
+```
+
+Local development can leave `VITE_API_URL` empty because Vite proxies `/api` to `http://localhost:8787`.
