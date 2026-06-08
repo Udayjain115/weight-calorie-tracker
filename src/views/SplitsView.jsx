@@ -9,12 +9,13 @@ function SplitsView({
   archiveCurrentCycle,
   customExercise,
   deleteArchivedCycle,
+  deleteSplit,
+  deleteSplitExercise,
   setCustomExercise,
   setSplitEntry,
   splitEntry,
   state,
   unarchiveCycle,
-  updateState,
 }) {
   const activeCycle = state.cycles.find((cycle) => cycle.id === state.activeCycleId);
   const archivedCycles = state.cycles.filter((cycle) => cycle.archived);
@@ -117,14 +118,20 @@ function SplitsView({
           <article className="panel" key={split.id}>
             <div className="split-title">
               <h2>{split.name}</h2>
-              <button className="icon-only" title="Delete split" onClick={() => updateState((current) => ({ ...current, splits: current.splits.filter((item) => item.id !== split.id) }))}>
+              <button className="icon-only" title="Delete split" onClick={() => deleteSplit(split.id)}>
                 <Trash2 size={18} />
               </button>
             </div>
             <div className="exercise-tags">
               {split.exercises.map((exercise) => (
-                <span key={exerciseName(exercise)}>{displayExercise(exercise)}</span>
+                <span className="exercise-chip" key={exerciseName(exercise)}>
+                  {displayExercise(exercise)}
+                  <button type="button" title={`Remove ${exerciseName(exercise)}`} onClick={() => deleteSplitExercise(split.id, exerciseName(exercise))}>
+                    <Trash2 size={14} />
+                  </button>
+                </span>
               ))}
+              {split.exercises.length === 0 && <p className="empty">No exercises in this split yet.</p>}
             </div>
           </article>
         ))}

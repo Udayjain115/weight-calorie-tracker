@@ -3,14 +3,16 @@ import { ArrowLeft, ArrowRight, Dumbbell, Info, Plus, Trash2 } from 'lucide-reac
 import ComparisonCard from '../components/ComparisonCard';
 import History from '../components/History';
 import { cycleExerciseBreakdown } from '../domain/cycleMetrics';
+import { exerciseName } from '../domain/exerciseConfig';
+import { insertAt } from '../domain/stateMutations';
 import { createId } from '../utils/id';
 
-function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEntry, state, workoutEntry }) {
+function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEntry, showUndo, state, workoutEntry }) {
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const exercises = selectedSplitExercises();
   const boundedIndex = Math.min(exerciseIndex, Math.max(0, exercises.length - 1));
   const currentExercise = exercises[boundedIndex] || '';
-  const currentSets = workoutEntry.sets.filter((set) => set.exercise === currentExercise);
+  const currentSets = currentExercise ? workoutEntry.sets.filter((set) => set.exercise === currentExercise) : [];
   const breakdown = useMemo(() => cycleExerciseBreakdown(state, [currentExercise])[0], [currentExercise, state]);
 
   function updateSet(setId, patch) {
@@ -36,6 +38,23 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
 
   function previousExercise() {
     setExerciseIndex((index) => Math.max(index - 1, 0));
+  }
+
+  function removeSet(setId) {
+    const setIndex = workoutEntry.sets.findIndex((item) => item.id === setId);
+    const deletedSet = workoutEntry.sets[setIndex];
+    if (!deletedSet) return;
+
+    setWorkoutEntry({
+      ...workoutEntry,
+      sets: workoutEntry.sets.filter((item) => item.id !== setId),
+    });
+    showUndo?.(`Removed ${deletedSet.exercise} set`, () => {
+      setWorkoutEntry((entry) => ({
+        ...entry,
+        sets: insertAt(entry.sets.filter((item) => item.id !== setId), setIndex, deletedSet),
+      }));
+    });
   }
 
   return (
@@ -68,10 +87,8 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
             Previous
           </button>
           <div>
-            <span>
-              Exercise {boundedIndex + 1} of {exercises.length}
-            </span>
-            <strong>{currentExercise}</strong>
+            <span>{exercises.length > 0 ? `Exercise ${boundedIndex + 1} of ${exercises.length}` : 'No exercises'}</span>
+            <strong>{currentExercise || 'Add exercises to this split'}</strong>
           </div>
           <button className="secondary" onClick={nextExercise} disabled={boundedIndex >= exercises.length - 1}>
             Next
@@ -79,13 +96,17 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
           </button>
         </div>
 
-        <section className="exercise-context">
-          <ComparisonCard title="Current" set={breakdown?.current} unit={state.unit} />
-          <ComparisonCard title="Vs last week" comparison={breakdown?.lastWeek} unit={state.unit} />
-          <ComparisonCard title="Vs cycle start" comparison={breakdown?.start} unit={state.unit} />
-          <ComparisonCard title="Vs current peak" comparison={breakdown?.currentPeak} unit={state.unit} />
-          <ComparisonCard title="Vs previous peak" comparison={breakdown?.previousPeak} unit={state.unit} />
-        </section>
+        {currentExercise ? (
+          <section className="exercise-context">
+            <ComparisonCard title="Current" set={breakdown?.current} unit={state.unit} />
+            <ComparisonCard title="Vs last week" comparison={breakdown?.lastWeek} unit={state.unit} />
+            <ComparisonCard title="Vs cycle start" comparison={breakdown?.start} unit={state.unit} />
+            <ComparisonCard title="Vs current peak" comparison={breakdown?.currentPeak} unit={state.unit} />
+            <ComparisonCard title="Vs previous peak" comparison={breakdown?.previousPeak} unit={state.unit} />
+          </section>
+        ) : (
+          <p className="empty">Add an exercise to this split before logging sets.</p>
+        )}
 
         <div className="set-header">
           <span>Load</span>
@@ -118,7 +139,7 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
                 value={set.rir}
                 onChange={(event) => updateSet(set.id, { rir: event.target.value })}
               />
-              <button className="icon-only" title="Remove set" onClick={() => setWorkoutEntry({ ...workoutEntry, sets: workoutEntry.sets.filter((item) => item.id !== set.id) })}>
+              <button className="icon-only" title="Remove set" onClick={() => removeSet(set.id)}>
                 <Trash2 size={18} />
               </button>
             </div>
@@ -126,7 +147,7 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
         </div>
 
         <div className="actions">
-          <button className="secondary" onClick={() => addSet(currentExercise)}>
+          <button className="secondary" onClick={() => addSet(currentExercise)} disabled={!currentExercise}>
             <Plus size={18} />
             Add set for {currentExercise}
           </button>
@@ -165,7 +186,7 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
 }
 
 function newWorkoutSet(exercise) {
-  return { id: createId(), exercise, weight: '', reps: '', rir: '' };
+  return { id: createId(), exercise: exerciseName(exercise) || exercise, weight: '', reps: '', rir: '' };
 }
 
 export default WorkoutView;

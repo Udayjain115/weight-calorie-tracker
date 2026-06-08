@@ -109,6 +109,37 @@ label {
   font-weight: 750;
 }
 
+.undo-banner {
+  position: sticky;
+  top: 76px;
+  z-index: 6;
+  border: 1px solid #c9d6cf;
+  border-radius: 8px;
+  background: #17211b;
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(22, 31, 26, 0.16);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 800;
+}
+
+.undo-banner button {
+  min-height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #17211b;
+  padding: 0 12px;
+}
+
+.undo-banner button:hover {
+  background: #edf3ef;
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: #1d6b52;
@@ -857,6 +888,29 @@ h2 {
   padding: 7px 10px;
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.exercise-tags .exercise-chip {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 4px 10px;
+}
+
+.exercise-chip button {
+  width: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #7c3a35;
+  padding: 0;
+}
+
+.exercise-chip button:hover {
+  background: #f3d9d6;
 }
 
 .chart-wrap {
@@ -1665,6 +1719,10 @@ h2 {
   .sync-banner {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .undo-banner {
+    top: 68px;
   }
 
   .tabs {

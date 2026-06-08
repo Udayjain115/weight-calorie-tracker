@@ -8,6 +8,7 @@
     "dev:web": "vite --host 0.0.0.0",
     "dev:api": "node server/index.js",
     "start:api": "node server/index.js",
+    "local": "npm run build && concurrently \"npm:start:api\" \"npm:preview\"",
     "test": "vitest run",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0"

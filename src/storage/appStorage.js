@@ -7,11 +7,14 @@ const STORAGE_KEY = 'strength-calories-v1';
 
 export function normalizeState(value) {
   const next = { ...starterState, ...(value && typeof value === 'object' ? value : {}) };
+  const requestedActiveCycleId = value && typeof value === 'object' ? value.activeCycleId : null;
   next.unit = next.unit === 'metric' ? 'metric' : 'imperial';
   next.goalMode = ['maingain', 'small_deficit', 'strength_only'].includes(next.goalMode) ? next.goalMode : 'maingain';
   next.calories = Number.isFinite(Number(next.calories)) ? Number(next.calories) : starterState.calories;
   next.cycles = normalizeCycles(next.cycles);
-  next.activeCycleId = next.activeCycleId || next.cycles.find((cycle) => !cycle.archived)?.id || next.cycles[0].id;
+  next.activeCycleId = next.cycles.some((cycle) => cycle.id === requestedActiveCycleId)
+    ? requestedActiveCycleId
+    : next.cycles.find((cycle) => !cycle.archived)?.id || next.cycles[0].id;
   next.splits = normalizeSplits(next.splits);
   next.customExercises = ensureArray(next.customExercises);
   next.bodyWeights = ensureArray(next.bodyWeights);

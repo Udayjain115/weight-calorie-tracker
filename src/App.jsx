@@ -5,6 +5,14 @@ import { commonExercises, createCycle, createStarterSplits } from './data/defaul
 import { calorieGuidance, getExerciseNames, summarizeStrength, weightTrend } from './domain/metrics';
 import { exerciseName, getRepRangeForExercise, makeSplitExercise } from './domain/exerciseConfig';
 import { analyzeWorkoutStrength } from './domain/strengthAnalysis';
+import {
+  deleteArchivedCycle as deleteArchivedCycleState,
+  deleteSplit as deleteSplitState,
+  removeSplitExercise,
+  restoreArchivedCycle,
+  restoreSplit,
+  restoreSplitExercise,
+} from './domain/stateMutations';
 import { createFreshUserState, loadState, normalizeState, saveState } from './storage/appStorage';
 import { today, rollingItems } from './utils/dates';
 import { createId } from './utils/id';
@@ -26,6 +34,7 @@ function App() {
   const [customExercise, setCustomExercise] = useState('');
   const [selectedExercise, setSelectedExercise] = useState(commonExercises[0]);
   const [exerciseScope, setExerciseScope] = useState({ mode: 'all', splitId: state.splits[0]?.id || '' });
+  const [undoAction, setUndoAction] = useState(null);
   const [workoutEntry, setWorkoutEntry] = useState(() => ({
     date: today,
     splitId: state.splits[0]?.id || '',
@@ -39,6 +48,12 @@ function App() {
   const strengthAlerts = useMemo(() => summarizeStrength(state.workouts, state), [state]);
   const extenuatingCount = useMemo(() => rollingItems(state.workouts, 0, 14).filter((item) => item.extenuating).length, [state.workouts]);
   const guidance = calorieGuidance(trend, strengthAlerts, extenuatingCount, state.goalMode);
+
+  useEffect(() => {
+    if (!undoAction) return undefined;
+    const timer = window.setTimeout(() => setUndoAction(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [undoAction]);
 
   useEffect(() => {
     if (!session?.token) return;
@@ -90,6 +105,16 @@ function App() {
       }
       return next;
     });
+  }
+
+  function showUndo(message, undo) {
+    setUndoAction({ id: createId(), message, undo });
+  }
+
+  function runUndo() {
+    if (!undoAction) return;
+    undoAction.undo();
+    setUndoAction(null);
   }
 
   function handleAuthenticated(nextSession) {
@@ -288,14 +313,66 @@ function App() {
     const cycle = state.cycles.find((item) => item.id === cycleId);
     if (!cycle?.archived) return;
 
-    const confirmed = window.confirm(`Permanently delete ${cycle.name} and its workout history? This cannot be undone.`);
+    const deletedCycleIndex = state.cycles.findIndex((item) => item.id === cycleId);
+    const deletedWorkouts = state.workouts.filter((workout) => workout.cycleId === cycleId);
+    const confirmed = window.confirm(`Delete ${cycle.name} and its workout history? You can undo this briefly after deleting.`);
     if (!confirmed) return;
 
     updateState((current) => ({
-      ...current,
-      cycles: current.cycles.filter((item) => item.id !== cycleId),
-      workouts: current.workouts.filter((workout) => workout.cycleId !== cycleId),
+      ...deleteArchivedCycleState(current, cycleId),
     }));
+    showUndo(`Deleted ${cycle.name}`, () => {
+      updateState((current) => restoreArchivedCycle(current, cycle, deletedCycleIndex, deletedWorkouts));
+    });
+  }
+
+  function deleteSplit(splitId) {
+    const split = state.splits.find((item) => item.id === splitId);
+    if (!split) return;
+    const splitIndex = state.splits.findIndex((item) => item.id === splitId);
+    const fallbackSplit = state.splits.find((item) => item.id !== splitId);
+    const wasSelectedSplit = workoutEntry.splitId === splitId;
+    const previousWorkoutEntry = workoutEntry;
+
+    updateState((current) => deleteSplitState(current, splitId));
+    if (wasSelectedSplit) {
+      setWorkoutEntry((entry) => ({
+        ...entry,
+        splitId: fallbackSplit?.id || '',
+        sets: [newWorkoutSet(exerciseName(fallbackSplit?.exercises[0]) || allExercises[0])],
+      }));
+    }
+    setExerciseScope((current) => (current.splitId === splitId ? { mode: 'all', splitId: '' } : current));
+    showUndo(`Deleted ${split.name}`, () => {
+      updateState((current) => restoreSplit(current, split, splitIndex));
+      if (wasSelectedSplit) {
+        setWorkoutEntry(previousWorkoutEntry);
+      }
+    });
+  }
+
+  function deleteSplitExercise(splitId, exerciseNameValue) {
+    const split = state.splits.find((item) => item.id === splitId);
+    if (!split) return;
+    const exerciseIndex = split.exercises.findIndex((exercise) => exerciseName(exercise) === exerciseNameValue);
+    const deletedExercise = split.exercises[exerciseIndex];
+    const wasSelectedSplit = workoutEntry.splitId === splitId;
+    const previousWorkoutEntry = workoutEntry;
+    if (exerciseIndex < 0) return;
+
+    updateState((current) => removeSplitExercise(current, splitId, exerciseNameValue));
+    if (wasSelectedSplit) {
+      setWorkoutEntry((entry) => ({
+        ...entry,
+        sets: entry.sets.filter((set) => set.exercise !== exerciseNameValue),
+      }));
+    }
+    showUndo(`Removed ${exerciseNameValue} from ${split.name}`, () => {
+      updateState((current) => restoreSplitExercise(current, splitId, exerciseNameValue, exerciseIndex, deletedExercise));
+      if (wasSelectedSplit) {
+        setWorkoutEntry(previousWorkoutEntry);
+      }
+    });
   }
 
   function selectedSplitExercises() {
@@ -347,6 +424,14 @@ function App() {
           </button>
         </div>
       )}
+      {undoAction && (
+        <div className="undo-banner" role="status">
+          <span>{undoAction.message}</span>
+          <button type="button" onClick={runUndo}>
+            Undo
+          </button>
+        </div>
+      )}
 
       <main>
         <nav className="tabs" aria-label="Primary">
@@ -387,6 +472,7 @@ function App() {
             saveWorkout={saveWorkout}
             selectedSplitExercises={selectedSplitExercises}
             setWorkoutEntry={setWorkoutEntry}
+            showUndo={showUndo}
             state={state}
             workoutEntry={workoutEntry}
           />
@@ -406,10 +492,11 @@ function App() {
             setSplitEntry={setSplitEntry}
             splitEntry={splitEntry}
             state={state}
-            updateState={updateState}
             archiveCurrentCycle={archiveCurrentCycle}
             unarchiveCycle={unarchiveCycle}
             deleteArchivedCycle={deleteArchivedCycle}
+            deleteSplit={deleteSplit}
+            deleteSplitExercise={deleteSplitExercise}
           />
         )}
       </main>
