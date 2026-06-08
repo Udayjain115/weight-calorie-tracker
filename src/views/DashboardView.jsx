@@ -45,7 +45,7 @@ function DashboardView({
       <article className={`guidance ${guidance.tone}`}>
         <div className="guidance-heading">
           <Utensils size={22} />
-          <span>Calorie call</span>
+          <span>Recommendation</span>
         </div>
         <h2>{guidance.label}</h2>
         <p>{guidance.detail}</p>
@@ -58,7 +58,7 @@ function DashboardView({
           </select>
         </label>
         <label className="calorie-input">
-          Current calories
+          Daily target
           <input type="number" value={state.calories} onChange={(event) => updateCalories(Number(event.target.value))} />
         </label>
       </article>
@@ -75,7 +75,7 @@ function DashboardView({
         value={strengthAlerts.length}
         detail={strengthAlerts.length ? 'Comparable performance declined' : 'No confirmed decline'}
       />
-      <MetricCard icon={<Moon size={20} />} label="Flagged sessions" value={extenuatingCount} detail="Excluded from calorie increases" />
+      <MetricCard icon={<Moon size={20} />} label="Flagged sessions" value={extenuatingCount} detail="Excluded from upward fuel changes" />
 
       <section className="panel wide">
         <TrendChart

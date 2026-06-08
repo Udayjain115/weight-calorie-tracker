@@ -6,17 +6,17 @@ describe('strength-only calorie mode', () => {
     const guidance = calorieGuidance({ weeklyChange: 1.4 }, [], 0, 'strength_only');
 
     expect(guidance).toMatchObject({
-      label: 'Decrease calories',
+      label: 'Pull back',
       tone: 'warning',
     });
-    expect(guidance.detail).toContain('still allows calorie decreases');
+    expect(guidance.detail).toContain('still allows intake decreases');
   });
 
   it('holds calories when strength is holding and weight gain is below the decrease threshold', () => {
     const guidance = calorieGuidance({ weeklyChange: 0.4 }, [], 0, 'strength_only');
 
     expect(guidance).toMatchObject({
-      label: 'No change',
+      label: 'Hold steady',
       tone: 'success',
     });
   });
@@ -25,7 +25,7 @@ describe('strength-only calorie mode', () => {
     const guidance = calorieGuidance({ weeklyChange: 1.4 }, [{ exercise: 'Bench Press' }], 0, 'strength_only');
 
     expect(guidance).toMatchObject({
-      label: 'Increase calories',
+      label: 'Eat more',
       tone: 'danger',
     });
     expect(guidance.detail).toContain('ignores weight trend');

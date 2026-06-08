@@ -11,10 +11,11 @@ function buildPath(points, xFor, yFor, key) {
 function TrendChart({ title, points, valueFormatter, rawLabel = 'Raw', averageLabel = 'Moving avg' }) {
   const width = 720;
   const height = 260;
-  const padding = { top: 20, right: 24, bottom: 38, left: 52 };
   const values = points.flatMap((point) => [point.raw, point.average]).filter(Number.isFinite);
   const minValue = values.length ? Math.min(...values) : 0;
   const maxValue = values.length ? Math.max(...values) : 1;
+  const axisLabelWidth = Math.max(valueFormatter(minValue).length, valueFormatter(maxValue).length) * 7;
+  const padding = { top: 22, right: 24, bottom: 42, left: Math.min(104, Math.max(72, axisLabelWidth + 18)) };
   const range = Math.max(1, maxValue - minValue);
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;

@@ -1,4 +1,4 @@
-# Strength Calories
+# Workout Diet Tracker
 
 A deployable workout and body-weight tracker built around one principle: gym strength should guide calorie intake.
 

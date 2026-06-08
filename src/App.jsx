@@ -387,7 +387,7 @@ function App() {
     return (
       <main className="auth-shell">
         <section className="auth-panel">
-          <p className="eyebrow">Strength Calories</p>
+          <p className="eyebrow">Workout Diet Tracker</p>
           <h1>Loading account</h1>
         </section>
       </main>
@@ -396,10 +396,25 @@ function App() {
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <header className="topbar">
         <div>
-          <p className="eyebrow">Strength Calories</p>
-          <h1>Eat from your performance.</h1>
+          <p className="eyebrow">Workout Diet Tracker</p>
+          <h1>Let training guide intake.</h1>
+        </div>
+        <div className="topbar-insights" aria-label="Current tracker summary">
+          <div>
+            <span>Daily target</span>
+            <strong>{state.calories || 'Set target'}</strong>
+          </div>
+          <div>
+            <span>Logged sessions</span>
+            <strong>{state.workouts.length}</strong>
+          </div>
+          <div>
+            <span>Scale entries</span>
+            <strong>{state.bodyWeights.length}</strong>
+          </div>
         </div>
         <div className="topbar-actions">
           <span className="user-pill">{session.user?.email}</span>
@@ -433,7 +448,7 @@ function App() {
         </div>
       )}
 
-      <main>
+      <main id="main-content">
         <nav className="tabs" aria-label="Primary">
           {[
             ['dashboard', BarChart3, 'Dashboard'],
