@@ -162,6 +162,12 @@ Use these backend settings:
   - `MONGODB_DB`
   - `CORS_ORIGIN=https://your-netlify-site.netlify.app`
 
+`CORS_ORIGIN` must match the URL shown in the browser address bar for the frontend. To allow multiple frontend URLs, separate them with commas:
+
+```bash
+CORS_ORIGIN=https://your-netlify-site.netlify.app,https://your-custom-domain.com
+```
+
 After the backend is deployed, add this environment variable to Netlify and redeploy the frontend:
 
 ```bash

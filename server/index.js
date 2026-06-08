@@ -12,7 +12,7 @@ const port = Number(process.env.PORT || 8787);
 
 validateRequiredEnv();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || true }));
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (_req, res) => {
@@ -131,6 +131,27 @@ function validateRequiredEnv() {
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
+}
+
+function corsOrigin(origin, callback) {
+  const allowedOrigins = parseAllowedOrigins(process.env.CORS_ORIGIN);
+  if (allowedOrigins.length === 0 || !origin || allowedOrigins.includes(normalizeOrigin(origin))) {
+    callback(null, true);
+    return;
+  }
+
+  callback(new Error(`CORS blocked origin: ${origin}`));
+}
+
+function parseAllowedOrigins(value = '') {
+  return value
+    .split(',')
+    .map((origin) => normalizeOrigin(origin.trim()))
+    .filter(Boolean);
+}
+
+function normalizeOrigin(origin) {
+  return origin.replace(/\/$/, '');
 }
 
 async function startServer() {

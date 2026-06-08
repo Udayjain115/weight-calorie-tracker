@@ -59,7 +59,7 @@ async function apiRequest(path, options = {}) {
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
   } catch {
-    throw Object.assign(new Error('Could not reach the API. Make sure the backend is running.'), { status: 0 });
+    throw Object.assign(new Error('Could not reach the API. Check Netlify VITE_API_URL and Render CORS_ORIGIN.'), { status: 0 });
   }
 
   const payload = await response.json().catch(() => ({}));
