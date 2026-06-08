@@ -59,6 +59,8 @@ const initialCycle = createCycle();
 
 export const starterState = {
   unit: 'imperial',
+  trackingMode: 'full',
+  onboardingComplete: false,
   goalMode: 'maingain',
   calories: 2600,
   activeCycleId: initialCycle.id,

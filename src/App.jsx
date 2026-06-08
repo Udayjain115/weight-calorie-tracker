@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BarChart3, CalendarDays, Dumbbell, LogOut, Scale } from 'lucide-react';
+import { BarChart3, CalendarDays, Dumbbell, LogOut, Scale, Settings } from 'lucide-react';
 import { clearSession, getMe, getTrackerState, loadSession, saveSession, saveTrackerState } from './api/client';
 import { commonExercises, createCycle, createStarterSplits } from './data/defaults';
 import { calorieGuidance, getExerciseNames, summarizeStrength, weightTrend } from './domain/metrics';
@@ -22,6 +22,8 @@ import AuthView from './views/AuthView';
 import SplitsView from './views/SplitsView';
 import WeightView from './views/WeightView';
 import WorkoutView from './views/WorkoutView';
+import SettingsView from './views/SettingsView';
+import OnboardingTutorial from './views/OnboardingTutorial';
 
 function App() {
   const [state, setState] = useState(loadState);
@@ -29,6 +31,7 @@ function App() {
   const [authLoading, setAuthLoading] = useState(Boolean(loadSession()?.token));
   const [syncError, setSyncError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [tutorialMode, setTutorialMode] = useState(() => loadState().trackingMode || 'full');
   const [weightEntry, setWeightEntry] = useState({ date: today, weight: '' });
   const [splitEntry, setSplitEntry] = useState({ name: '', exercise: commonExercises[0], repMin: '4', repMax: '8' });
   const [customExercise, setCustomExercise] = useState('');
@@ -48,12 +51,19 @@ function App() {
   const strengthAlerts = useMemo(() => summarizeStrength(state.workouts, state), [state]);
   const extenuatingCount = useMemo(() => rollingItems(state.workouts, 0, 14).filter((item) => item.extenuating).length, [state.workouts]);
   const guidance = calorieGuidance(trend, strengthAlerts, extenuatingCount, state.goalMode);
+  const isLiftOnly = state.trackingMode === 'lifts';
 
   useEffect(() => {
     if (!undoAction) return undefined;
     const timer = window.setTimeout(() => setUndoAction(null), 6000);
     return () => window.clearTimeout(timer);
   }, [undoAction]);
+
+  useEffect(() => {
+    if (isLiftOnly && activeTab === 'weight') {
+      setActiveTab('dashboard');
+    }
+  }, [activeTab, isLiftOnly]);
 
   useEffect(() => {
     if (!session?.token) return;
@@ -130,6 +140,14 @@ function App() {
 
   function setUnit(unit) {
     updateState((current) => ({ ...current, unit }));
+  }
+
+  function setTrackingMode(trackingMode) {
+    updateState((current) => ({ ...current, trackingMode }));
+  }
+
+  function completeOnboarding() {
+    updateState((current) => ({ ...current, trackingMode: tutorialMode, onboardingComplete: true }));
   }
 
   function addWeight() {
@@ -400,37 +418,41 @@ function App() {
       <header className="topbar">
         <div>
           <p className="eyebrow">Workout Diet Tracker</p>
-          <h1>Let training guide intake.</h1>
+          <h1>{isLiftOnly ? 'Track the lifts that matter.' : 'Let training guide intake.'}</h1>
         </div>
         <div className="topbar-insights" aria-label="Current tracker summary">
-          <div>
-            <span>Daily target</span>
-            <strong>{state.calories || 'Set target'}</strong>
-          </div>
+          {!isLiftOnly && (
+            <div>
+              <span>Daily target</span>
+              <strong>{state.calories || 'Set target'}</strong>
+            </div>
+          )}
           <div>
             <span>Logged sessions</span>
             <strong>{state.workouts.length}</strong>
           </div>
-          <div>
-            <span>Scale entries</span>
-            <strong>{state.bodyWeights.length}</strong>
-          </div>
+          {isLiftOnly ? (
+            <div>
+              <span>Tracked splits</span>
+              <strong>{state.splits.length}</strong>
+            </div>
+          ) : (
+            <div>
+              <span>Scale entries</span>
+              <strong>{state.bodyWeights.length}</strong>
+            </div>
+          )}
         </div>
         <div className="topbar-actions">
           <span className="user-pill">{session.user?.email}</span>
-          <div className="unit-toggle" role="group" aria-label="Weight units">
-            <button className={state.unit === 'imperial' ? 'active' : ''} type="button" onClick={() => setUnit('imperial')}>
-              lb
-            </button>
-            <button className={state.unit === 'metric' ? 'active' : ''} type="button" onClick={() => setUnit('metric')}>
-              kg
-            </button>
-          </div>
           <button className="icon-button" title="Log out" onClick={logout}>
             <LogOut size={20} />
           </button>
         </div>
       </header>
+      {!state.onboardingComplete && (
+        <OnboardingTutorial selectedMode={tutorialMode} setSelectedMode={setTutorialMode} onComplete={completeOnboarding} />
+      )}
       {syncError && (
         <div className="sync-banner" role="status">
           <span>{syncError}</span>
@@ -453,8 +475,9 @@ function App() {
           {[
             ['dashboard', BarChart3, 'Dashboard'],
             ['workout', Dumbbell, 'Workout'],
-            ['weight', Scale, 'Weight'],
+            ...(!isLiftOnly ? [['weight', Scale, 'Weight']] : []),
             ['splits', CalendarDays, 'Splits'],
+            ['settings', Settings, 'Settings'],
           ].map(([id, Icon, label]) => (
             <button key={id} className={activeTab === id ? 'active' : ''} onClick={() => setActiveTab(id)}>
               <Icon size={18} />
@@ -475,6 +498,7 @@ function App() {
             state={state}
             strengthAlerts={strengthAlerts}
             trend={trend}
+            trackingMode={state.trackingMode}
             clearMockData={clearMockData}
             updateCalories={(calories) => updateState((current) => ({ ...current, calories }))}
             updateGoalMode={(goalMode) => updateState((current) => ({ ...current, goalMode }))}
@@ -514,6 +538,8 @@ function App() {
             deleteSplitExercise={deleteSplitExercise}
           />
         )}
+
+        {activeTab === 'settings' && <SettingsView state={state} setTrackingMode={setTrackingMode} setUnit={setUnit} />}
       </main>
     </div>
   );

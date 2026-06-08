@@ -9,6 +9,8 @@ export function normalizeState(value) {
   const next = { ...starterState, ...(value && typeof value === 'object' ? value : {}) };
   const requestedActiveCycleId = value && typeof value === 'object' ? value.activeCycleId : null;
   next.unit = next.unit === 'metric' ? 'metric' : 'imperial';
+  next.trackingMode = next.trackingMode === 'lifts' ? 'lifts' : 'full';
+  next.onboardingComplete = Boolean(next.onboardingComplete);
   next.goalMode = ['maingain', 'small_deficit', 'strength_only'].includes(next.goalMode) ? next.goalMode : 'maingain';
   next.calories = Number.isFinite(Number(next.calories)) ? Number(next.calories) : starterState.calories;
   next.cycles = normalizeCycles(next.cycles);
@@ -97,5 +99,6 @@ export function createFreshUserState() {
     workouts: [],
     hasMockData: false,
     mockDataCleared: true,
+    onboardingComplete: false,
   });
 }

@@ -2080,6 +2080,301 @@ h2 {
   }
 }
 
+/* Onboarding and settings */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 18;
+  padding: clamp(12px, 3vw, 34px);
+  background: rgba(19, 19, 16, 0.68);
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+}
+
+.tutorial-panel {
+  width: min(1120px, 100%);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 250, 240, 0.18);
+  border-radius: 34px;
+  background:
+    linear-gradient(135deg, rgba(255, 253, 247, 0.94), rgba(236, 229, 217, 0.94)),
+    url("https://picsum.photos/seed/training-logbook/1600/1000");
+  background-blend-mode: normal, luminosity;
+  background-size: cover;
+  box-shadow: 0 40px 120px rgba(18, 19, 15, 0.42);
+  padding: clamp(20px, 4vw, 46px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.75fr);
+  gap: clamp(18px, 4vw, 40px);
+}
+
+.tutorial-copy {
+  align-self: end;
+  display: grid;
+  gap: 18px;
+}
+
+.tutorial-copy h1 {
+  max-width: 11ch;
+  font-size: clamp(3.1rem, 7vw, 7rem);
+  line-height: 0.82;
+}
+
+.tutorial-copy p:not(.eyebrow) {
+  max-width: 58ch;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.tutorial-bento {
+  grid-column: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  overflow: hidden;
+  background: rgba(255, 253, 247, 0.58);
+}
+
+.tutorial-bento article {
+  min-height: 174px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 20px;
+  display: grid;
+  align-content: space-between;
+  gap: 16px;
+}
+
+.tutorial-bento article:nth-child(even) {
+  border-right: 0;
+}
+
+.tutorial-bento article:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.tutorial-bento svg,
+.mode-choice-icon {
+  color: var(--green-dark);
+}
+
+.tutorial-bento span,
+.mode-choice small,
+.settings-hero p,
+.settings-section-head span,
+.tutorial-actions p {
+  color: var(--muted);
+}
+
+.tutorial-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background: rgba(255, 253, 247, 0.78);
+  padding: clamp(18px, 3vw, 28px);
+  display: grid;
+  align-content: space-between;
+  gap: 20px;
+}
+
+.mode-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mode-choice {
+  min-height: 190px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 253, 247, 0.76);
+  color: var(--ink);
+  box-shadow: none;
+  padding: 18px;
+  display: grid;
+  justify-items: start;
+  align-content: space-between;
+  text-align: left;
+}
+
+.mode-choice:hover {
+  border-color: rgba(39, 108, 83, 0.28);
+  background: #fffdf7;
+}
+
+.mode-choice.selected {
+  border-color: rgba(39, 108, 83, 0.46);
+  background: rgba(226, 240, 229, 0.92);
+  box-shadow: inset 0 0 0 2px rgba(39, 108, 83, 0.14);
+}
+
+.mode-choice-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(39, 108, 83, 0.1);
+  display: grid;
+  place-items: center;
+}
+
+.mode-choice strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1.15rem;
+  line-height: 1.05;
+}
+
+.mode-choice small {
+  display: block;
+  font-size: 0.9rem;
+  line-height: 1.42;
+}
+
+.tutorial-start {
+  align-self: end;
+}
+
+.settings-view {
+  max-width: 980px;
+}
+
+.settings-hero p {
+  max-width: 66ch;
+  margin: 12px 0 0;
+  line-height: 1.6;
+}
+
+.settings-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.settings-section-head span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(23, 25, 21, 0.055);
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.settings-segment {
+  width: min(320px, 100%);
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(23, 25, 21, 0.06);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  padding: 5px;
+}
+
+.settings-segment button {
+  min-height: 42px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.settings-segment button.active {
+  background: var(--ink);
+  color: #fffaf0;
+}
+
+.lift-dashboard {
+  grid-template-columns: minmax(0, 1.25fr) repeat(2, minmax(210px, 0.48fr));
+}
+
+.lift-dashboard .guidance h2 {
+  max-width: 8ch;
+  font-size: clamp(3.2rem, 7vw, 7rem);
+}
+
+.lift-dashboard .metric-card:nth-of-type(3),
+.lift-dashboard .metric-card:nth-of-type(4) {
+  transform: none;
+}
+
+@media (max-width: 1120px) {
+  .tabs {
+    grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .tutorial-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .tutorial-actions,
+  .tutorial-bento {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .tutorial-copy h1 {
+    max-width: 10ch;
+    font-size: clamp(2.8rem, 13vw, 5rem);
+  }
+
+  .mode-choice-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .tutorial-overlay {
+    align-items: start;
+    padding: 8px;
+  }
+
+  .tutorial-panel {
+    max-height: none;
+    border-radius: 24px;
+    padding: 16px;
+  }
+
+  .tutorial-bento {
+    grid-template-columns: 1fr;
+  }
+
+  .tutorial-bento article,
+  .tutorial-bento article:nth-child(even),
+  .tutorial-bento article:nth-last-child(-n + 2) {
+    min-height: 142px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tutorial-bento article:last-child {
+    border-bottom: 0;
+  }
+
+  .mode-choice {
+    min-height: 150px;
+  }
+
+  .settings-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lift-dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Premium redesign pass: soft structural training cockpit */
 :root {
   --bg: #f6f1e8;

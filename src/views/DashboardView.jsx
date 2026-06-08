@@ -19,9 +19,11 @@ function DashboardView({
   state,
   strengthAlerts,
   trend,
+  trackingMode,
   updateCalories,
   updateGoalMode,
 }) {
+  const isLiftOnly = trackingMode === 'lifts';
   const weightPoints = bodyWeightChartPoints(state.bodyWeights);
   const exercisePoints = selectedExercise ? exerciseChartPoints(state.workouts, selectedExercise, exerciseScope) : [];
   const progressionRows = selectedExercise ? exerciseProgressionRows(state.workouts, selectedExercise, exerciseScope) : [];
@@ -29,8 +31,8 @@ function DashboardView({
   const activeSplitName = state.splits.find((split) => split.id === exerciseScope.splitId)?.name || 'selected workout';
 
   return (
-    <section className="dashboard-grid">
-      {state.hasMockData && (
+    <section className={`dashboard-grid ${isLiftOnly ? 'lift-dashboard' : ''}`}>
+      {state.hasMockData && !isLiftOnly && (
         <section className="mock-banner wide">
           <div>
             <strong>Mock data is loaded</strong>
@@ -42,50 +44,70 @@ function DashboardView({
         </section>
       )}
 
-      <article className={`guidance ${guidance.tone}`}>
-        <div className="guidance-heading">
-          <Utensils size={22} />
-          <span>Recommendation</span>
-        </div>
-        <h2>{guidance.label}</h2>
-        <p>{guidance.detail}</p>
-        <label className="calorie-input">
-          Goal mode
-          <select value={state.goalMode} onChange={(event) => updateGoalMode(event.target.value)}>
-            <option value="maingain">Standard maingain</option>
-            <option value="small_deficit">Small deficit</option>
-            <option value="strength_only">Strength only</option>
-          </select>
-        </label>
-        <label className="calorie-input">
-          Daily target
-          <input type="number" value={state.calories} onChange={(event) => updateCalories(Number(event.target.value))} />
-        </label>
-      </article>
+      {isLiftOnly ? (
+        <article className="guidance lift-brief success">
+          <div className="guidance-heading">
+            <DumbbellMark />
+            <span>Lift focus</span>
+          </div>
+          <h2>Train. Compare. Adjust.</h2>
+          <p>Lift-only mode keeps the app centered on workouts, comparable top sets, exercise trends, and training cycles.</p>
+        </article>
+      ) : (
+        <article className={`guidance ${guidance.tone}`}>
+          <div className="guidance-heading">
+            <Utensils size={22} />
+            <span>Recommendation</span>
+          </div>
+          <h2>{guidance.label}</h2>
+          <p>{guidance.detail}</p>
+          <label className="calorie-input">
+            Goal mode
+            <select value={state.goalMode} onChange={(event) => updateGoalMode(event.target.value)}>
+              <option value="maingain">Standard maingain</option>
+              <option value="small_deficit">Small deficit</option>
+              <option value="strength_only">Strength only</option>
+            </select>
+          </label>
+          <label className="calorie-input">
+            Daily target
+            <input type="number" value={state.calories} onChange={(event) => updateCalories(Number(event.target.value))} />
+          </label>
+        </article>
+      )}
 
-      <MetricCard
-        icon={<Scale size={20} />}
-        label="14-day average"
-        value={trend ? formatWeight(trend.average, state.unit) : 'Need data'}
-        detail={trend ? `${trend.weeklyChange >= 0 ? '+' : ''}${trend.weeklyChange.toFixed(2)} lb/week` : 'Log at least two weigh-ins'}
-      />
+      {!isLiftOnly && (
+        <MetricCard
+          icon={<Scale size={20} />}
+          label="14-day average"
+          value={trend ? formatWeight(trend.average, state.unit) : 'Need data'}
+          detail={trend ? `${trend.weeklyChange >= 0 ? '+' : ''}${trend.weeklyChange.toFixed(2)} lb/week` : 'Log at least two weigh-ins'}
+        />
+      )}
       <MetricCard
         icon={<Activity size={20} />}
         label="Strength alerts"
         value={strengthAlerts.length}
         detail={strengthAlerts.length ? 'Comparable performance declined' : 'No confirmed decline'}
       />
-      <MetricCard icon={<Moon size={20} />} label="Flagged sessions" value={extenuatingCount} detail="Excluded from upward fuel changes" />
+      <MetricCard
+        icon={<Moon size={20} />}
+        label={isLiftOnly ? 'Context flags' : 'Flagged sessions'}
+        value={extenuatingCount}
+        detail={isLiftOnly ? 'Kept visible in workout history' : 'Excluded from upward fuel changes'}
+      />
 
-      <section className="panel wide">
-        <TrendChart
-          title="Body weight trend"
-          points={weightPoints}
-          valueFormatter={(value) => formatWeight(value, state.unit)}
-          rawLabel="Weigh-in"
-          averageLabel="Moving avg"
-        />
-      </section>
+      {!isLiftOnly && (
+        <section className="panel wide">
+          <TrendChart
+            title="Body weight trend"
+            points={weightPoints}
+            valueFormatter={(value) => formatWeight(value, state.unit)}
+            rawLabel="Weigh-in"
+            averageLabel="Moving avg"
+          />
+        </section>
+      )}
 
       <section className="panel wide">
         <div className="chart-toolbar">
@@ -313,3 +335,7 @@ function ProgressTable({ columns, emptyMessage, rows, renderRow }) {
 }
 
 export default DashboardView;
+
+function DumbbellMark() {
+  return <Activity size={22} />;
+}

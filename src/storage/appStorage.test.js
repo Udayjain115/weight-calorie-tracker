@@ -5,6 +5,7 @@ describe('saved tracker state normalization', () => {
   it('fills missing collections and coerces basic preferences to supported values', () => {
     const state = normalizeState({
       unit: 'stones',
+      trackingMode: 'unknown',
       goalMode: 'bulk-fast',
       calories: '2700',
       cycles: [{ id: 'cycle-1' }],
@@ -13,6 +14,8 @@ describe('saved tracker state normalization', () => {
 
     expect(state).toMatchObject({
       unit: 'imperial',
+      trackingMode: 'full',
+      onboardingComplete: false,
       goalMode: 'maingain',
       calories: 2700,
       activeCycleId: 'cycle-1',
