@@ -4225,7 +4225,7 @@ video {
 
 /* Across-session progression alignment */
 .progress-table.progression-table {
-  min-width: 760px;
+  min-width: 920px;
   table-layout: fixed;
 }
 
@@ -4261,7 +4261,7 @@ video {
 
 .progression-table th:nth-child(7),
 .progression-table td:nth-child(7) {
-  width: 148px;
+  width: 220px;
 }
 
 .progression-table td {
