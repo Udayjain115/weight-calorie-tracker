@@ -7,7 +7,7 @@ import { exerciseName } from '../domain/exerciseConfig';
 import { insertAt } from '../domain/stateMutations';
 import { createId } from '../utils/id';
 
-function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEntry, showUndo, state, workoutEntry }) {
+function WorkoutView({ addSet, cancelWorkoutEdit, deleteWorkout, editWorkout, saveWorkout, selectedSplitExercises, setWorkoutEntry, showUndo, state, workoutEntry }) {
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const exercises = selectedSplitExercises();
   const boundedIndex = Math.min(exerciseIndex, Math.max(0, exercises.length - 1));
@@ -32,12 +32,24 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
     });
   }
 
+  function ensureExerciseSet(exercise) {
+    if (!exercise || workoutEntry.sets.some((set) => set.exercise === exercise)) return;
+    addSet(exercise);
+  }
+
+  function goToExercise(index) {
+    const nextIndex = Math.max(0, Math.min(index, exercises.length - 1));
+    const nextExercise = exercises[nextIndex];
+    ensureExerciseSet(nextExercise);
+    setExerciseIndex(nextIndex);
+  }
+
   function nextExercise() {
-    setExerciseIndex((index) => Math.min(index + 1, exercises.length - 1));
+    goToExercise(boundedIndex + 1);
   }
 
   function previousExercise() {
-    setExerciseIndex((index) => Math.max(index - 1, 0));
+    goToExercise(boundedIndex - 1);
   }
 
   function removeSet(setId) {
@@ -62,12 +74,25 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
       <section className="panel workout-flow">
         <div className="panel-title">
           <Dumbbell size={20} />
-          <h2>Start workout</h2>
+          <h2>{workoutEntry.editingWorkoutId ? 'Edit workout' : 'Start workout'}</h2>
         </div>
+        {workoutEntry.editingWorkoutId && (
+          <div className="edit-mode-banner">
+            <span>Updating an existing workout. Publishing will replace that entry and merge with any matching workout on this date.</span>
+            <button type="button" className="secondary" onClick={cancelWorkoutEdit}>
+              Cancel edit
+            </button>
+          </div>
+        )}
         <div className="form-grid">
           <label>
             Date
-            <input type="date" value={workoutEntry.date} onChange={(event) => setWorkoutEntry({ ...workoutEntry, date: event.target.value })} />
+            <input
+              type="date"
+              autoComplete="off"
+              value={workoutEntry.date}
+              onChange={(event) => setWorkoutEntry({ ...workoutEntry, date: event.target.value })}
+            />
           </label>
           <label>
             Workout day
@@ -124,14 +149,23 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
               <input
                 type="number"
                 inputMode="decimal"
+                autoComplete="off"
                 placeholder={state.unit === 'metric' ? 'kg' : 'lb'}
                 value={set.weight}
                 onChange={(event) => updateSet(set.id, { weight: event.target.value })}
               />
-              <input type="number" inputMode="numeric" placeholder="Reps" value={set.reps} onChange={(event) => updateSet(set.id, { reps: event.target.value })} />
               <input
                 type="number"
                 inputMode="numeric"
+                autoComplete="off"
+                placeholder="Reps"
+                value={set.reps}
+                onChange={(event) => updateSet(set.id, { reps: event.target.value })}
+              />
+              <input
+                type="number"
+                inputMode="numeric"
+                autoComplete="off"
                 min="0"
                 max="10"
                 placeholder="RIR"
@@ -170,17 +204,18 @@ function WorkoutView({ addSet, saveWorkout, selectedSplitExercises, setWorkoutEn
           <input
             className="full-input"
             placeholder="Optional note"
+            autoComplete="off"
             value={workoutEntry.reason}
             onChange={(event) => setWorkoutEntry({ ...workoutEntry, reason: event.target.value })}
           />
         )}
 
         <div className="actions">
-          <button onClick={saveWorkout}>Save workout</button>
+          <button onClick={saveWorkout}>{workoutEntry.editingWorkoutId ? 'Update workout' : 'Publish workout'}</button>
         </div>
       </section>
 
-      <History workouts={state.workouts} unit={state.unit} />
+      <History workouts={state.workouts} unit={state.unit} onEditWorkout={editWorkout} onDeleteWorkout={deleteWorkout} />
     </section>
   );
 }

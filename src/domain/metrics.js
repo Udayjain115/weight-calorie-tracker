@@ -1,4 +1,4 @@
-import { daysBetween, rollingItems } from '../utils/dates';
+import { daysAgo, daysBetween, rollingItems, today } from '../utils/dates';
 import { exerciseName } from './exerciseConfig.js';
 export { summarizeStrength } from './strengthAnalysis.js';
 
@@ -20,10 +20,60 @@ export function weightTrend(bodyWeights, referenceDate) {
     last,
     weeklyChange,
     average: current.reduce((sum, item) => sum + item.weight, 0) / current.length,
+    lostTwoWeeksInRow: lostTwoWeeksInRow(bodyWeights, referenceDate),
+  };
+}
+
+export function calorieAverage(calorieEntries, days = 7, referenceDate) {
+  const current = rollingItems(calorieEntries, 0, days, referenceDate)
+    .filter((entry) => Number(entry.calories) > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (current.length === 0) return null;
+
+  return {
+    days: current.length,
+    average: current.reduce((sum, entry) => sum + Number(entry.calories), 0) / current.length,
+    latest: current[current.length - 1],
+  };
+}
+
+export function calorieTargetForToday(calorieEntries, dailyTarget, referenceDate = today) {
+  const target = Number(dailyTarget);
+  if (!Number.isFinite(target) || target <= 0) return null;
+
+  const previousSix = calorieEntries
+    .filter((entry) => {
+      const age = daysAgo(entry.date, referenceDate);
+      return age >= 1 && age <= 6 && Number(entry.calories) > 0;
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const todayEntry = calorieEntries.find((entry) => entry.date === referenceDate && Number(entry.calories) > 0);
+  const previousCalories = previousSix.reduce((sum, entry) => sum + Number(entry.calories), 0);
+  const rawRecommendation = target * 7 - previousCalories;
+  const maxAdjustment = Math.min(300, target * 0.1);
+  const cappedAdjustment = Math.max(-maxAdjustment, Math.min(maxAdjustment, rawRecommendation - target));
+  const recommendedCalories = Math.max(0, Math.round(target + cappedAdjustment));
+  const projectedAverage = (previousCalories + (todayEntry ? Number(todayEntry.calories) : recommendedCalories)) / (previousSix.length + 1);
+
+  return {
+    target,
+    previousDays: previousSix.length,
+    previousAverage: previousSix.length ? previousCalories / previousSix.length : null,
+    recommendedCalories,
+    rawRecommendation,
+    exactCatchUpCalories: Math.max(0, Math.round(rawRecommendation)),
+    cappedAdjustment: Math.round(cappedAdjustment),
+    isCapped: Math.round(rawRecommendation) !== recommendedCalories,
+    todayLogged: todayEntry ? Number(todayEntry.calories) : null,
+    projectedAverage,
+    isCompleteWindow: previousSix.length === 6,
   };
 }
 
 export function calorieGuidance(trend, strengthAlerts, extenuatingCount, goalMode = 'maingain') {
+  const mode = ['maingain', 'small_deficit'].includes(goalMode) ? goalMode : 'maingain';
+
   if (!trend) {
     return {
       label: 'Log more weigh-ins',
@@ -35,141 +85,94 @@ export function calorieGuidance(trend, strengthAlerts, extenuatingCount, goalMod
   const change = trend.weeklyChange;
   const gymDown = strengthAlerts.length > 0;
 
-  if (goalMode === 'strength_only') {
-    return strengthOnlyGuidance(change, gymDown, extenuatingCount);
-  }
-
-  if (goalMode === 'small_deficit') {
-    return smallDeficitGuidance(change, gymDown, extenuatingCount);
-  }
-
-  return maingainGuidance(change, gymDown, extenuatingCount);
-}
-
-function maingainGuidance(change, gymDown, extenuatingCount) {
   if (change >= 1) {
+    return pullBackGuidance();
+  }
+
+  if (gymDown) {
+    return strengthDownGuidance();
+  }
+
+  if (mode === 'maingain' && trend.lostTwoWeeksInRow) {
     return {
-      label: 'Pull back',
-      detail: 'Body weight is climbing at 1+ lb per week. Bring intake down before fat gain gets ahead of you.',
+      label: 'Eat more',
+      detail: 'Body weight has moved down two weeks in a row. In maingain mode, increase intake unless performance is clearly improving and this loss is intentional.',
       tone: 'warning',
     };
   }
 
-  if (Math.abs(change) < 0.25 && gymDown) {
+  if (extenuatingCount > 0) {
     return {
-      label: 'Eat more',
-      detail: 'Weight is flat and comparable gym performance is down. A small intake increase is warranted.',
-      tone: 'danger',
+      label: 'Hold steady',
+      detail: 'Recent poor sessions were marked as extenuating, so they are not driving intake changes.',
+      tone: 'success',
+    };
+  }
+
+  if (mode === 'small_deficit' && trend.lostTwoWeeksInRow) {
+    return {
+      label: 'Hold steady',
+      detail: 'Weight is down two weeks in a row, which fits small-deficit mode because comparable strength is not down.',
+      tone: 'success',
+    };
+  }
+
+  return holdSteadyGuidance(change);
+}
+
+function strengthDownGuidance() {
+  return {
+    label: 'Eat more',
+    detail: 'Comparable strength is down, so intake should increase even if body-weight trend is otherwise acceptable.',
+    tone: 'danger',
+  };
+}
+
+function pullBackGuidance() {
+  return {
+    label: 'Pull back',
+    detail: 'Body weight is climbing at 1+ lb per week. Decrease calories before fat gain gets ahead of you.',
+    tone: 'warning',
+  };
+}
+
+function holdSteadyGuidance(change) {
+  if (Math.abs(change) < 0.25) {
+    return {
+      label: 'Hold steady',
+      detail: 'Body weight is effectively flat and comparable performance is steady or improving, so calories stay the same.',
+      tone: 'success',
     };
   }
 
   if (Math.abs(change) >= 0.25 && Math.abs(change) <= 0.5) {
     return {
       label: 'Hold steady',
-      detail: 'Weekly weight change is inside the acceptable 0.25-0.5 lb drift range.',
-      tone: 'success',
-    };
-  }
-
-  if (extenuatingCount > 0 && !gymDown) {
-    return {
-      label: 'Hold steady',
-      detail: 'Recent poor sessions were marked as extenuating, so they are not driving intake changes.',
+      detail: 'Weekly weight change is inside the acceptable 0.25-0.5 lb drift range and performance is steady or improving.',
       tone: 'success',
     };
   }
 
   return {
     label: 'Hold steady',
-    detail: 'Weight and gym performance are within the maintenance target for now.',
+    detail: 'No calorie change is needed because performance is not down and weight gain is below the 1 lb/week decrease threshold.',
     tone: 'success',
   };
 }
 
-function smallDeficitGuidance(change, gymDown, extenuatingCount) {
-  if (change < -1) {
-    return {
-      label: 'Eat more',
-      detail: 'Weight is dropping faster than the small-deficit target. Add food to protect training performance.',
-      tone: 'warning',
-    };
-  }
+function lostTwoWeeksInRow(bodyWeights, referenceDate) {
+  const buckets = [
+    rollingItems(bodyWeights, 14, 21, referenceDate),
+    rollingItems(bodyWeights, 7, 14, referenceDate),
+    rollingItems(bodyWeights, 0, 7, referenceDate),
+  ].map(averageWeight);
 
-  if (gymDown) {
-    return {
-      label: 'Eat more',
-      detail: 'Performance is down during the deficit. Increase intake unless the drop is clearly explained by extenuating factors.',
-      tone: 'danger',
-    };
-  }
-
-  if (change >= 0.25) {
-    return {
-      label: 'Pull back',
-      detail: 'Weight is increasing, which does not match the small-deficit goal. Reduce intake slightly.',
-      tone: 'warning',
-    };
-  }
-
-  if (change > -0.25 && change < 0.25) {
-    return {
-      label: 'Nudge down',
-      detail: 'Weight is roughly flat. Training is holding, so a small intake decrease can move you into a mild deficit.',
-      tone: 'neutral',
-    };
-  }
-
-  if (change >= -1 && change <= -0.25) {
-    return {
-      label: 'Hold steady',
-      detail: 'Weight is falling slowly and gym performance is not showing a comparable decline.',
-      tone: 'success',
-    };
-  }
-
-  if (extenuatingCount > 0) {
-    return {
-      label: 'Hold steady',
-      detail: 'Recent poor sessions were marked as extenuating, so they are not driving intake changes.',
-      tone: 'success',
-    };
-  }
-
-  return {
-    label: 'Hold steady',
-    detail: 'Small-deficit trend is acceptable for now.',
-    tone: 'success',
-  };
+  if (buckets.some((bucket) => bucket === null)) return false;
+  return buckets[0] > buckets[1] && buckets[1] > buckets[2];
 }
 
-function strengthOnlyGuidance(change, gymDown, extenuatingCount) {
-  if (gymDown) {
-    return {
-      label: 'Eat more',
-      detail: 'Strength is down. This mode ignores weight trend and only raises intake when comparable gym performance drops.',
-      tone: 'danger',
-    };
-  }
-
-  if (change >= 1) {
-    return {
-      label: 'Pull back',
-      detail: 'Strength is holding, but body weight is climbing at 1+ lb per week. This mode still allows intake decreases to control unnecessary gain.',
-      tone: 'warning',
-    };
-  }
-
-  if (extenuatingCount > 0) {
-    return {
-      label: 'Hold steady',
-      detail: 'No confirmed strength drop. Flagged sessions are noted, but this mode only changes intake when strength is actually down.',
-      tone: 'success',
-    };
-  }
-
-  return {
-    label: 'Hold steady',
-    detail: 'Strength is holding and weight gain is below the decrease threshold, so intake stays the same.',
-    tone: 'success',
-  };
+function averageWeight(entries) {
+  const valid = entries.filter((entry) => Number.isFinite(Number(entry.weight)));
+  if (valid.length === 0) return null;
+  return valid.reduce((sum, entry) => sum + Number(entry.weight), 0) / valid.length;
 }

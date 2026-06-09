@@ -19,6 +19,7 @@ function SplitsView({
 }) {
   const activeCycle = state.cycles.find((cycle) => cycle.id === state.activeCycleId);
   const archivedCycles = state.cycles.filter((cycle) => cycle.archived);
+  const splitNameSuggestions = [...new Set([...state.splits.map((split) => split.name), 'Upper A', 'Lower A', 'Upper B', 'Lower B', 'Push', 'Pull', 'Legs'])];
 
   return (
     <section className="stack">
@@ -82,7 +83,13 @@ function SplitsView({
         <div className="form-grid split-builder">
           <label>
             Split name
-            <input value={splitEntry.name} placeholder="Upper B" onChange={(event) => setSplitEntry({ ...splitEntry, name: event.target.value })} />
+            <input
+              value={splitEntry.name}
+              list="split-name-suggestions"
+              autoComplete="off"
+              placeholder="Upper B"
+              onChange={(event) => setSplitEntry({ ...splitEntry, name: event.target.value })}
+            />
           </label>
           <label>
             Exercise
@@ -96,21 +103,51 @@ function SplitsView({
           </label>
           <label>
             Rep min
-            <input type="number" min="1" value={splitEntry.repMin} onChange={(event) => setSplitEntry({ ...splitEntry, repMin: event.target.value })} />
+            <input
+              type="number"
+              inputMode="numeric"
+              autoComplete="off"
+              min="1"
+              value={splitEntry.repMin}
+              onChange={(event) => setSplitEntry({ ...splitEntry, repMin: event.target.value })}
+            />
           </label>
           <label>
             Rep max
-            <input type="number" min="1" value={splitEntry.repMax} onChange={(event) => setSplitEntry({ ...splitEntry, repMax: event.target.value })} />
+            <input
+              type="number"
+              inputMode="numeric"
+              autoComplete="off"
+              min="1"
+              value={splitEntry.repMax}
+              onChange={(event) => setSplitEntry({ ...splitEntry, repMax: event.target.value })}
+            />
           </label>
           <button onClick={addSplitExercise}>Add to split</button>
         </div>
         <div className="inline-add">
-          <input value={customExercise} placeholder="Custom exercise" onChange={(event) => setCustomExercise(event.target.value)} />
+          <input
+            value={customExercise}
+            list="exercise-name-suggestions"
+            autoComplete="off"
+            placeholder="Custom exercise"
+            onChange={(event) => setCustomExercise(event.target.value)}
+          />
           <button className="secondary" onClick={addCustomExercise}>
             <Plus size={18} />
             Add exercise
           </button>
         </div>
+        <datalist id="split-name-suggestions">
+          {splitNameSuggestions.map((name) => (
+            <option value={name} key={name} />
+          ))}
+        </datalist>
+        <datalist id="exercise-name-suggestions">
+          {allExercises.map((exercise) => (
+            <option value={exercise} key={exercise} />
+          ))}
+        </datalist>
       </section>
 
       <section className="split-grid">

@@ -22,6 +22,22 @@ export function bodyWeightChartPoints(bodyWeights) {
   );
 }
 
+export function calorieChartPoints(calorieEntries) {
+  const sorted = [...calorieEntries]
+    .filter((entry) => entry.date && Number.isFinite(Number(entry.calories)) && Number(entry.calories) > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return movingAverage(
+    sorted.map((entry) => ({
+      id: entry.id,
+      date: entry.date,
+      raw: Number(entry.calories),
+    })),
+    'raw',
+    7,
+  );
+}
+
 function scopedWorkouts(workouts, scope = {}) {
   if (scope.mode !== 'split' || !scope.splitId) return workouts;
   return workouts.filter((workout) => workout.splitId === scope.splitId);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bodyWeightChartPoints, exerciseChartPoints, exerciseProgressionRows } from './trends.js';
+import { bodyWeightChartPoints, calorieChartPoints, exerciseChartPoints, exerciseProgressionRows } from './trends.js';
 
 describe('chart moving averages', () => {
   it('uses a trailing 3-point moving average for body weight chart points', () => {
@@ -15,6 +15,22 @@ describe('chart moving averages', () => {
       ['2026-06-02', 182, 181],
       ['2026-06-03', 181, 181],
       ['2026-06-04', 184, 182.33333333333334],
+    ]);
+  });
+
+  it('uses a trailing 7-point moving average for calorie chart points', () => {
+    const points = calorieChartPoints([
+      { id: 'd', date: '2026-06-04', calories: 2800 },
+      { id: 'b', date: '2026-06-02', calories: 2200 },
+      { id: 'a', date: '2026-06-01', calories: 2000 },
+      { id: 'c', date: '2026-06-03', calories: 2400 },
+    ]);
+
+    expect(points.map((point) => [point.date, point.raw, point.average])).toEqual([
+      ['2026-06-01', 2000, 2000],
+      ['2026-06-02', 2200, 2100],
+      ['2026-06-03', 2400, 2200],
+      ['2026-06-04', 2800, 2350],
     ]);
   });
 });

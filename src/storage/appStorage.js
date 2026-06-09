@@ -11,7 +11,7 @@ export function normalizeState(value) {
   next.unit = next.unit === 'metric' ? 'metric' : 'imperial';
   next.trackingMode = next.trackingMode === 'lifts' ? 'lifts' : 'full';
   next.onboardingComplete = Boolean(next.onboardingComplete);
-  next.goalMode = ['maingain', 'small_deficit', 'strength_only'].includes(next.goalMode) ? next.goalMode : 'maingain';
+  next.goalMode = ['maingain', 'small_deficit'].includes(next.goalMode) ? next.goalMode : 'maingain';
   next.calories = Number.isFinite(Number(next.calories)) ? Number(next.calories) : starterState.calories;
   next.cycles = normalizeCycles(next.cycles);
   next.activeCycleId = next.cycles.some((cycle) => cycle.id === requestedActiveCycleId)
@@ -20,6 +20,10 @@ export function normalizeState(value) {
   next.splits = normalizeSplits(next.splits);
   next.customExercises = ensureArray(next.customExercises);
   next.bodyWeights = ensureArray(next.bodyWeights);
+  next.calorieEntries = ensureArray(next.calorieEntries)
+    .map(normalizeCalorieEntry)
+    .filter((entry) => entry.date && entry.calories > 0)
+    .sort((a, b) => b.date.localeCompare(a.date));
   next.workouts = ensureArray(next.workouts).map((workout) => ({ ...workout, cycleId: workout.cycleId || next.activeCycleId }));
   next.hasMockData = Boolean(next.hasMockData);
   next.mockDataCleared = Boolean(next.mockDataCleared);
@@ -28,6 +32,15 @@ export function normalizeState(value) {
 
 function ensureArray(value) {
   return Array.isArray(value) ? value : [];
+}
+
+function normalizeCalorieEntry(entry) {
+  return {
+    id: entry?.id || createId(),
+    date: entry?.date || '',
+    calories: Number(entry?.calories) || 0,
+    mock: Boolean(entry?.mock),
+  };
 }
 
 function normalizeCycles(cycles) {
@@ -96,6 +109,7 @@ export function saveState(nextState) {
 export function createFreshUserState() {
   return normalizeState({
     bodyWeights: [],
+    calorieEntries: [],
     workouts: [],
     hasMockData: false,
     mockDataCleared: true,

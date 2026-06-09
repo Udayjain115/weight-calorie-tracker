@@ -4054,3 +4054,771 @@ video {
     height: 16px;
   }
 }
+
+/* Weight and intake logging */
+.weight-log-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.intake-panel {
+  align-content: space-between;
+}
+
+.intake-average,
+.today-calorie-target {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(23, 25, 21, 0.055);
+  padding: 16px;
+  display: grid;
+  gap: 5px;
+}
+
+.today-calorie-target {
+  background: rgba(39, 108, 83, 0.08);
+}
+
+.today-calorie-target.high {
+  background: rgba(181, 111, 36, 0.12);
+  border-color: rgba(181, 111, 36, 0.28);
+}
+
+.intake-average span,
+.intake-average small,
+.today-calorie-target span,
+.today-calorie-target small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.intake-average span,
+.today-calorie-target span {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.intake-average strong,
+.today-calorie-target strong {
+  color: var(--ink);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+
+.actual-intake-note {
+  border: 1px solid rgba(255, 250, 240, 0.22);
+  border-radius: 16px;
+  background: rgba(255, 250, 240, 0.1);
+  padding: 12px;
+}
+
+.diet-mode-help {
+  display: grid;
+  gap: 8px;
+}
+
+.diet-mode-help button {
+  width: 100%;
+  border: 1px solid rgba(255, 250, 240, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 250, 240, 0.08);
+  color: inherit;
+  padding: 11px 12px;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+}
+
+.diet-mode-help button.active {
+  border-color: rgba(255, 250, 240, 0.42);
+  background: rgba(255, 250, 240, 0.16);
+}
+
+.diet-mode-help strong {
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.diet-mode-help span {
+  color: rgba(255, 250, 240, 0.78);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 780px) {
+  .weight-log-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Workout history editing */
+.history-row {
+  grid-template-columns: minmax(150px, 0.85fr) minmax(0, 2fr) auto;
+  align-items: start;
+}
+
+.history-meta {
+  min-width: 0;
+}
+
+.history-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.danger-icon {
+  color: #8f231b;
+  border-color: rgba(143, 35, 27, 0.22);
+  background: rgba(143, 35, 27, 0.08);
+}
+
+.edit-mode-banner {
+  border: 1px solid rgba(39, 108, 83, 0.2);
+  border-radius: 18px;
+  background: rgba(39, 108, 83, 0.08);
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.edit-mode-banner button {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 680px) {
+  .history-row {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .history-meta {
+    grid-column: 1;
+  }
+
+  .mini-sets {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .history-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .edit-mode-banner {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .edit-mode-banner button {
+    width: 100%;
+  }
+}
+
+/* Across-session progression alignment */
+.progress-table.progression-table {
+  min-width: 760px;
+  table-layout: fixed;
+}
+
+.progression-table th,
+.progression-table td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+.progression-table th:nth-child(1),
+.progression-table td:nth-child(1) {
+  width: 112px;
+}
+
+.progression-table th:nth-child(2),
+.progression-table td:nth-child(2) {
+  width: 126px;
+}
+
+.progression-table th:nth-child(3),
+.progression-table td:nth-child(3) {
+  width: 142px;
+}
+
+.progression-table th:nth-child(4),
+.progression-table td:nth-child(4),
+.progression-table th:nth-child(5),
+.progression-table td:nth-child(5),
+.progression-table th:nth-child(6),
+.progression-table td:nth-child(6) {
+  width: 104px;
+}
+
+.progression-table th:nth-child(7),
+.progression-table td:nth-child(7) {
+  width: 148px;
+}
+
+.progression-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+.progression-table td[data-label="Status"] {
+  white-space: nowrap;
+}
+
+.progression-table .flag-note {
+  display: inline-flex;
+  margin-left: 6px;
+}
+
+.progress-table.cycle-breakdown-table {
+  min-width: 1120px;
+}
+
+@media (max-width: 680px) {
+  .progress-table.progression-table {
+    min-width: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .progression-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .progression-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  .progression-table td {
+    width: auto !important;
+    min-height: 56px;
+    border: 1px solid rgba(23, 25, 21, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 253, 247, 0.76) !important;
+    padding: 9px 10px;
+    display: grid;
+    align-content: center;
+    gap: 4px;
+  }
+
+  .progression-table td::before {
+    margin: 0;
+    font-size: 0.66rem;
+    line-height: 1;
+  }
+
+  .progression-table td[data-label="Top set"],
+  .progression-table td[data-label="Status"] {
+    grid-column: 1 / -1;
+  }
+
+  .progression-table td[data-label="Status"] {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    white-space: normal;
+  }
+
+  .progression-table td[data-label="Status"]::before {
+    flex: 0 0 100%;
+  }
+
+  .progression-table .status-pill {
+    min-height: 26px;
+    padding-inline: 9px;
+  }
+
+  .progression-table .flag-note {
+    margin-left: 0;
+  }
+}
+
+/* Latest raw exercise values alignment */
+.raw-values-list {
+  gap: 10px;
+}
+
+.simple-row.raw-value-row {
+  display: grid;
+  grid-template-columns: minmax(112px, 0.6fr) minmax(180px, 1fr) minmax(112px, auto);
+  align-items: center;
+  gap: 12px;
+}
+
+.raw-value-date,
+.raw-value-set,
+.raw-value-status {
+  min-width: 0;
+}
+
+.raw-value-date {
+  color: var(--muted);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.raw-value-set {
+  justify-self: start;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.raw-value-status {
+  justify-self: end;
+  min-height: 28px;
+  border-radius: 999px;
+  background: rgba(23, 25, 21, 0.07);
+  color: var(--muted);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.raw-value-status.flagged {
+  background: rgba(181, 111, 36, 0.14);
+  color: #8b5a13;
+}
+
+@media (max-width: 680px) {
+  .simple-row.raw-value-row {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    border-radius: 16px;
+  }
+
+  .raw-value-date {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .raw-value-status {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 120px;
+    white-space: normal;
+  }
+
+  .raw-value-set {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .simple-row.raw-value-row {
+    grid-template-columns: 1fr;
+  }
+
+  .raw-value-status {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .raw-value-set {
+    grid-row: 3;
+  }
+}
+
+/* Dashboard layout reset */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) repeat(4, minmax(150px, 0.65fr));
+  grid-auto-flow: row;
+  grid-auto-rows: auto;
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.dashboard-grid > * {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.dashboard-grid > .mock-banner {
+  grid-column: 1 / -1;
+}
+
+.dashboard-grid > .guidance {
+  grid-column: span 2;
+  min-height: 0;
+}
+
+.dashboard-grid > .recommended-calories-card {
+  grid-column: span 1;
+}
+
+.dashboard-grid > .metric-card {
+  grid-column: span 1;
+  min-height: 220px;
+}
+
+.dashboard-grid > .metric-card:nth-of-type(n) {
+  grid-column: span 1;
+  grid-row: auto;
+}
+
+.dashboard-grid > .wide,
+.dashboard-grid > .panel.wide {
+  grid-column: 1 / -1;
+}
+
+.dashboard-grid > .panel.wide:nth-of-type(n),
+.dashboard-grid > .wide:nth-of-type(n) {
+  grid-column: 1 / -1;
+  grid-row: auto;
+}
+
+.recommended-calories-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(39, 108, 83, 0.24);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.94), rgba(231, 243, 232, 0.9));
+  color: var(--ink);
+  padding: clamp(18px, 2.5vw, 26px);
+  display: grid;
+  align-content: space-between;
+  gap: 16px;
+  box-shadow: 0 16px 42px rgba(31, 38, 29, 0.08);
+}
+
+.recommended-calories-card h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(3.4rem, 7vw, 6rem);
+  line-height: 0.9;
+}
+
+.recommended-calories-card p {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.recommended-calories-card small {
+  color: var(--muted);
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.dashboard-grid > .guidance h2 {
+  max-width: 9ch;
+  font-size: clamp(3.6rem, 6vw, 5.8rem);
+  line-height: 0.96;
+  margin-bottom: 4px;
+}
+
+.dashboard-grid > .guidance {
+  align-content: start;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.dashboard-grid > .guidance > p {
+  position: relative;
+  z-index: 1;
+  margin-top: 0;
+  line-height: 1.45;
+}
+
+.dashboard-grid > .metric-card strong {
+  font-size: clamp(2.8rem, 5vw, 4.8rem);
+  line-height: 0.95;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dashboard-grid > .guidance {
+    grid-column: span 2;
+  }
+
+  .dashboard-grid > .recommended-calories-card {
+    grid-column: span 2;
+  }
+
+  .dashboard-grid > .metric-card {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid > .guidance,
+  .dashboard-grid > .recommended-calories-card {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-grid > .metric-card {
+    grid-column: span 1;
+    min-height: 170px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid > .metric-card {
+    grid-column: 1;
+  }
+
+  .dashboard-grid > .guidance h2 {
+    font-size: clamp(2.85rem, 15vw, 4.2rem);
+    line-height: 0.98;
+  }
+
+  .recommended-calories-card h2 {
+    font-size: clamp(3.2rem, 18vw, 5rem);
+  }
+}
+
+/* Dashboard summary redesign */
+.dashboard-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.dashboard-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+  gap: clamp(14px, 2vw, 22px);
+  align-items: stretch;
+}
+
+.dashboard-summary .guidance {
+  min-height: auto;
+  padding: clamp(20px, 3vw, 34px);
+}
+
+.dashboard-summary .guidance h2 {
+  max-width: 10ch;
+  font-size: clamp(3.4rem, 7vw, 6.2rem);
+  line-height: 0.94;
+  margin: 0;
+}
+
+.dashboard-summary .guidance > p {
+  max-width: 64ch;
+}
+
+.dashboard-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 0.42fr);
+  gap: 10px;
+}
+
+.diet-mode-note {
+  border: 1px solid rgba(255, 250, 240, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 250, 240, 0.1);
+  padding: 11px 12px;
+  color: rgba(255, 250, 240, 0.82);
+  font-weight: 800;
+  font-size: 0.86rem;
+}
+
+.dashboard-stats-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 12px;
+  min-width: 0;
+}
+
+.recommended-calories-card.compact {
+  min-height: 0;
+  padding: 20px;
+  border-radius: 24px;
+  align-content: start;
+}
+
+.recommended-calories-card.compact h2 {
+  font-size: clamp(3rem, 6vw, 4.8rem);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.recommended-calories-card.compact small {
+  max-width: 48ch;
+}
+
+.summary-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summary-stat {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 253, 247, 0.78);
+  padding: 16px;
+  display: grid;
+  align-content: space-between;
+  gap: 10px;
+}
+
+.summary-stat span,
+.summary-stat p {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.summary-stat span {
+  font-size: 0.78rem;
+}
+
+.summary-stat strong {
+  color: var(--ink);
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  line-height: 0.96;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-stat p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-stats-panel {
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-summary,
+  .dashboard-stats-panel,
+  .dashboard-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-summary .guidance h2 {
+    font-size: clamp(2.8rem, 14vw, 4.2rem);
+  }
+
+  .summary-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Body charts and compact raw data */
+.body-chart-grid,
+.body-data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.body-chart-grid .panel,
+.body-data-grid .panel {
+  min-width: 0;
+}
+
+.data-panel {
+  display: grid;
+  align-content: start;
+}
+
+.scroll-list {
+  max-height: 330px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+}
+
+.scroll-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scroll-list::-webkit-scrollbar-track {
+  background: rgba(23, 25, 21, 0.06);
+  border-radius: 999px;
+}
+
+.scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(39, 108, 83, 0.34);
+  border-radius: 999px;
+}
+
+.raw-dot {
+  cursor: pointer;
+  transition:
+    r 0.16s ease,
+    stroke-width 0.16s ease,
+    filter 0.16s ease;
+}
+
+.raw-dot:hover,
+.raw-dot:focus {
+  r: 7;
+  stroke-width: 4;
+  filter: drop-shadow(0 4px 8px rgba(28, 61, 84, 0.22));
+  outline: none;
+}
+
+.chart-tooltip line {
+  stroke: rgba(18, 24, 21, 0.22);
+  stroke-dasharray: 4 5;
+  stroke-width: 2;
+}
+
+.chart-tooltip rect {
+  fill: rgba(18, 24, 21, 0.94);
+  stroke: rgba(255, 253, 247, 0.22);
+  stroke-width: 1;
+}
+
+.chart-tooltip text {
+  fill: #fffdf7;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 980px) {
+  .body-chart-grid,
+  .body-data-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .scroll-list {
+    max-height: 280px;
+  }
+}

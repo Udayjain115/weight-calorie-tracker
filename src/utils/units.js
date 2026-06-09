@@ -6,7 +6,7 @@ export function poundsFromDisplay(value, unit) {
   return unit === 'metric' ? parsed * KG_TO_LB : parsed;
 }
 
-function displayFromPounds(value, unit) {
+export function displayFromPounds(value, unit) {
   if (!Number.isFinite(value)) return '';
   return unit === 'metric' ? (value / KG_TO_LB).toFixed(1) : value.toFixed(1);
 }

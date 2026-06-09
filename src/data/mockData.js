@@ -52,6 +52,15 @@ export function createMockState() {
       mock: true,
     };
   }).sort((a, b) => b.date.localeCompare(a.date));
+  const calorieEntries = Array.from({ length: 14 }, (_, index) => {
+    const wave = Math.sin(index / 2.1) * 130;
+    return {
+      id: `mock-calories-${createId()}`,
+      date: dateDaysAgo(13 - index),
+      calories: Math.round(2680 + wave),
+      mock: true,
+    };
+  }).sort((a, b) => b.date.localeCompare(a.date));
 
   const workouts = [
     mockWorkout(27, upperA, previousCycle.id, [
@@ -141,6 +150,7 @@ export function createMockState() {
     activeCycleId: activeCycle.id,
     cycles: [previousCycle, activeCycle],
     bodyWeights,
+    calorieEntries,
     workouts,
     hasMockData: true,
     mockDataCleared: false,

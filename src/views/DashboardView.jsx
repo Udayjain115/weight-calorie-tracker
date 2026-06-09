@@ -1,7 +1,6 @@
 import React from 'react';
-import { Activity, AlertTriangle, CalendarDays, Moon, Scale, Utensils } from 'lucide-react';
+import { Activity, AlertTriangle, CalendarDays, Flame, Moon, Scale, Utensils } from 'lucide-react';
 import ComparisonCard from '../components/ComparisonCard';
-import MetricCard from '../components/MetricCard';
 import TrendChart from '../components/TrendChart';
 import { cycleExerciseBreakdown } from '../domain/cycleMetrics';
 import { bodyWeightChartPoints, exerciseChartPoints, exerciseProgressionRows } from '../domain/trends';
@@ -19,6 +18,8 @@ function DashboardView({
   state,
   strengthAlerts,
   trend,
+  intakeAverage,
+  todayCalories,
   trackingMode,
   updateCalories,
   updateGoalMode,
@@ -44,58 +45,99 @@ function DashboardView({
         </section>
       )}
 
-      {isLiftOnly ? (
-        <article className="guidance lift-brief success">
-          <div className="guidance-heading">
-            <DumbbellMark />
-            <span>Lift focus</span>
-          </div>
-          <h2>Train. Compare. Adjust.</h2>
-          <p>Lift-only mode keeps the app centered on workouts, comparable top sets, exercise trends, and training cycles.</p>
-        </article>
-      ) : (
-        <article className={`guidance ${guidance.tone}`}>
-          <div className="guidance-heading">
-            <Utensils size={22} />
-            <span>Recommendation</span>
-          </div>
-          <h2>{guidance.label}</h2>
-          <p>{guidance.detail}</p>
-          <label className="calorie-input">
-            Goal mode
-            <select value={state.goalMode} onChange={(event) => updateGoalMode(event.target.value)}>
-              <option value="maingain">Standard maingain</option>
-              <option value="small_deficit">Small deficit</option>
-              <option value="strength_only">Strength only</option>
-            </select>
-          </label>
-          <label className="calorie-input">
-            Daily target
-            <input type="number" value={state.calories} onChange={(event) => updateCalories(Number(event.target.value))} />
-          </label>
-        </article>
-      )}
+      <section className="dashboard-summary wide">
+        {isLiftOnly ? (
+          <article className="guidance lift-brief success">
+            <div className="guidance-heading">
+              <DumbbellMark />
+              <span>Lift focus</span>
+            </div>
+            <h2>Train. Compare. Adjust.</h2>
+            <p>Lift-only mode keeps the app centered on workouts, comparable top sets, exercise trends, and training cycles.</p>
+          </article>
+        ) : (
+          <article className={`guidance ${guidance.tone}`}>
+            <div className="guidance-heading">
+              <Utensils size={22} />
+              <span>Recommendation</span>
+            </div>
+            <h2>{guidance.label}</h2>
+            <p>{guidance.detail}</p>
+            <p className="actual-intake-note">
+              {intakeAverage
+                ? `Your logged 7-day average is ${Math.round(intakeAverage.average).toLocaleString()} calories/day. Use that as the real baseline.`
+                : 'Log daily calorie totals to use your real intake instead of the target.'}
+            </p>
+            <div className="dashboard-controls">
+              <label className="calorie-input">
+                Goal mode
+                <select value={state.goalMode} onChange={(event) => updateGoalMode(event.target.value)}>
+                  {DIET_MODES.map((mode) => (
+                    <option value={mode.id} key={mode.id}>
+                      {mode.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="calorie-input">
+                Daily target
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={state.calories}
+                  onChange={(event) => updateCalories(Number(event.target.value))}
+                />
+              </label>
+            </div>
+            <p className="diet-mode-note">{DIET_MODES.find((mode) => mode.id === state.goalMode)?.detail}</p>
+          </article>
+        )}
 
-      {!isLiftOnly && (
-        <MetricCard
-          icon={<Scale size={20} />}
-          label="14-day average"
-          value={trend ? formatWeight(trend.average, state.unit) : 'Need data'}
-          detail={trend ? `${trend.weeklyChange >= 0 ? '+' : ''}${trend.weeklyChange.toFixed(2)} lb/week` : 'Log at least two weigh-ins'}
-        />
-      )}
-      <MetricCard
-        icon={<Activity size={20} />}
-        label="Strength alerts"
-        value={strengthAlerts.length}
-        detail={strengthAlerts.length ? 'Comparable performance declined' : 'No confirmed decline'}
-      />
-      <MetricCard
-        icon={<Moon size={20} />}
-        label={isLiftOnly ? 'Context flags' : 'Flagged sessions'}
-        value={extenuatingCount}
-        detail={isLiftOnly ? 'Kept visible in workout history' : 'Excluded from upward fuel changes'}
-      />
+        <aside className="dashboard-stats-panel">
+          {!isLiftOnly && (
+            <div className="recommended-calories-card compact">
+              <div className="guidance-heading">
+                <Flame size={22} />
+                <span>Today</span>
+              </div>
+              <h2>{todayCalories ? todayCalories.recommendedCalories.toLocaleString() : 'Set target'}</h2>
+              <p>Recommended calories</p>
+              <small>{todayTargetDetail(todayCalories)}</small>
+            </div>
+          )}
+          <div className="summary-stat-grid">
+            {!isLiftOnly && (
+              <>
+                <SummaryStat
+                  icon={<Scale size={18} />}
+                  label="14-day average"
+                  value={trend ? formatWeight(trend.average, state.unit) : 'Need data'}
+                  detail={trend ? `${trend.weeklyChange >= 0 ? '+' : ''}${trend.weeklyChange.toFixed(2)} lb/week` : 'Log at least two weigh-ins'}
+                />
+                <SummaryStat
+                  icon={<Flame size={18} />}
+                  label="7-day intake"
+                  value={intakeAverage ? Math.round(intakeAverage.average).toLocaleString() : 'Need logs'}
+                  detail={intakeAverage ? `${intakeAverage.days} logged day${intakeAverage.days === 1 ? '' : 's'}` : 'Log calorie totals'}
+                />
+              </>
+            )}
+            <SummaryStat
+              icon={<Activity size={18} />}
+              label="Strength alerts"
+              value={strengthAlerts.length}
+              detail={strengthAlerts.length ? 'Comparable performance declined' : 'No confirmed decline'}
+            />
+            <SummaryStat
+              icon={<Moon size={18} />}
+              label={isLiftOnly ? 'Context flags' : 'Flagged sessions'}
+              value={extenuatingCount}
+              detail={isLiftOnly ? 'Kept visible in history' : 'Excluded from upward fuel changes'}
+            />
+          </div>
+        </aside>
+      </section>
 
       {!isLiftOnly && (
         <section className="panel wide">
@@ -211,19 +253,19 @@ function DashboardView({
           <CalendarDays size={20} />
           <h2>Latest raw exercise values</h2>
         </div>
-        <div className="simple-list">
+        <div className="simple-list raw-values-list">
           {exercisePoints.length === 0 && <p className="empty">No sets logged for this exercise yet.</p>}
           {exercisePoints
             .slice()
             .reverse()
             .slice(0, 8)
             .map((point) => (
-              <div className="simple-row" key={point.id}>
-                <span>{point.date}</span>
-                <strong>
+              <div className="simple-row raw-value-row" key={point.id}>
+                <span className="raw-value-date">{point.date}</span>
+                <strong className="raw-value-set">
                   {formatWeight(point.weight, state.unit)} x {point.reps}, RIR {point.rir}
                 </strong>
-                {point.extenuating && <span>Flagged session</span>}
+                <span className={`raw-value-status ${point.extenuating ? 'flagged' : ''}`}>{point.extenuating ? 'Flagged session' : 'Valid session'}</span>
               </div>
             ))}
         </div>
@@ -239,9 +281,48 @@ function formatDelta(value, formatter) {
   return prefix + formatter(value);
 }
 
+function SummaryStat({ detail, icon, label, value }) {
+  return (
+    <article className="summary-stat">
+      <div className="metric-icon">{icon}</div>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <p>{detail}</p>
+    </article>
+  );
+}
+
+const DIET_MODES = [
+  {
+    id: 'maingain',
+    label: 'Standard maingain',
+    detail: 'Hold when weight is stable or drifting 0.25-0.5 lb with solid performance. Increase if strength drops or weight falls two weeks in a row.',
+  },
+  {
+    id: 'small_deficit',
+    label: 'Small deficit',
+    detail: 'Slow weight loss is acceptable if strength is steady or improving. Increase only when performance drops; decrease on 1+ lb gain.',
+  },
+];
+
+function todayTargetDetail(target) {
+  if (!target) return 'Set a daily calorie target to calculate today.';
+  if (target.todayLogged !== null) {
+    return `You logged ${Math.round(target.todayLogged).toLocaleString()} today. Projected weekly average: ${Math.round(target.projectedAverage).toLocaleString()}.`;
+  }
+  if (!target.isCompleteWindow) {
+    return `${target.previousDays}/6 prior days logged. This gets more accurate with a full rolling week.`;
+  }
+  if (target.isCapped) {
+    return `Exact catch-up would be ${target.exactCatchUpCalories.toLocaleString()}, so this is capped near your current target.`;
+  }
+  return `Small rolling adjustment around your ${Math.round(target.target).toLocaleString()} target.`;
+}
+
 function ProgressionTable({ rows, unit }) {
   return (
     <ProgressTable
+      className="progression-table"
       columns={['Date', 'Workout', 'Top set', 'Load', 'Reps', 'RIR', 'Status']}
       emptyMessage="No sets logged for this exercise yet."
       rows={rows.slice().reverse().slice(0, 10)}
@@ -274,6 +355,7 @@ function ProgressionRow({ point, unit }) {
 function CycleBreakdownTable({ rows, unit }) {
   return (
     <ProgressTable
+      className="cycle-breakdown-table"
       columns={['Exercise', 'Current', 'Vs last week', 'Vs cycle start', 'Vs current peak', 'Vs previous peak']}
       emptyMessage="Log workouts in the active cycle to see exercise comparisons."
       rows={rows}
@@ -313,14 +395,14 @@ function CycleBreakdownRow({ row, unit }) {
   );
 }
 
-function ProgressTable({ columns, emptyMessage, rows, renderRow }) {
+function ProgressTable({ className = '', columns, emptyMessage, rows, renderRow }) {
   if (rows.length === 0) {
     return <p className="empty">{emptyMessage}</p>;
   }
 
   return (
     <div className="progress-table-wrap">
-      <table className="progress-table">
+      <table className={`progress-table ${className}`.trim()}>
         <thead>
           <tr>
             {columns.map((column) => (

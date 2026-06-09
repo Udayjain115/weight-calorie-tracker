@@ -68,6 +68,7 @@ export const starterState = {
   splits: starterSplits,
   customExercises: [],
   bodyWeights: [],
+  calorieEntries: [],
   workouts: [],
   hasMockData: false,
   mockDataCleared: false,

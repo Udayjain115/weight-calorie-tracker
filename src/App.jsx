@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { BarChart3, CalendarDays, Dumbbell, LogOut, Scale, Settings } from 'lucide-react';
 import { clearSession, getMe, getTrackerState, loadSession, saveSession, saveTrackerState } from './api/client';
 import { commonExercises, createCycle, createStarterSplits } from './data/defaults';
-import { calorieGuidance, getExerciseNames, summarizeStrength, weightTrend } from './domain/metrics';
+import { calorieAverage, calorieGuidance, calorieTargetForToday, getExerciseNames, summarizeStrength, weightTrend } from './domain/metrics';
 import { exerciseName, getRepRangeForExercise, makeSplitExercise } from './domain/exerciseConfig';
 import { analyzeWorkoutStrength } from './domain/strengthAnalysis';
 import {
@@ -16,7 +16,7 @@ import {
 import { createFreshUserState, loadState, normalizeState, saveState } from './storage/appStorage';
 import { today, rollingItems } from './utils/dates';
 import { createId } from './utils/id';
-import { poundsFromDisplay } from './utils/units';
+import { displayFromPounds, poundsFromDisplay } from './utils/units';
 import DashboardView from './views/DashboardView';
 import AuthView from './views/AuthView';
 import SplitsView from './views/SplitsView';
@@ -33,6 +33,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [tutorialMode, setTutorialMode] = useState(() => loadState().trackingMode || 'full');
   const [weightEntry, setWeightEntry] = useState({ date: today, weight: '' });
+  const [calorieEntry, setCalorieEntry] = useState({ date: today, calories: '' });
   const [splitEntry, setSplitEntry] = useState({ name: '', exercise: commonExercises[0], repMin: '4', repMax: '8' });
   const [customExercise, setCustomExercise] = useState('');
   const [selectedExercise, setSelectedExercise] = useState(commonExercises[0]);
@@ -43,11 +44,14 @@ function App() {
     splitId: state.splits[0]?.id || '',
     extenuating: false,
     reason: '',
+    editingWorkoutId: null,
     sets: [newWorkoutSet(exerciseName(state.splits[0]?.exercises[0]) || commonExercises[0])],
   }));
 
   const allExercises = useMemo(() => getExerciseNames(commonExercises, state), [state]);
   const trend = useMemo(() => weightTrend(state.bodyWeights), [state.bodyWeights]);
+  const intakeAverage = useMemo(() => calorieAverage(state.calorieEntries), [state.calorieEntries]);
+  const todayCalories = useMemo(() => calorieTargetForToday(state.calorieEntries || [], state.calories), [state.calorieEntries, state.calories]);
   const strengthAlerts = useMemo(() => summarizeStrength(state.workouts, state), [state]);
   const extenuatingCount = useMemo(() => rollingItems(state.workouts, 0, 14).filter((item) => item.extenuating).length, [state.workouts]);
   const guidance = calorieGuidance(trend, strengthAlerts, extenuatingCount, state.goalMode);
@@ -176,6 +180,22 @@ function App() {
     setWeightEntry({ date: today, weight: '' });
   }
 
+  function addCalories() {
+    if (!calorieEntry.calories) return;
+    const entry = {
+      id: createId(),
+      date: calorieEntry.date,
+      calories: Number(calorieEntry.calories),
+    };
+    if (!Number.isFinite(entry.calories) || entry.calories <= 0) return;
+
+    updateState((current) => ({
+      ...current,
+      calorieEntries: [...(current.calorieEntries || []).filter((item) => item.date !== entry.date), entry].sort((a, b) => b.date.localeCompare(a.date)),
+    }));
+    setCalorieEntry({ date: today, calories: '' });
+  }
+
   function addSet(exercise) {
     setWorkoutEntry((entry) => ({
       ...entry,
@@ -197,8 +217,9 @@ function App() {
     if (!sets.length) return;
 
     updateState((current) => {
+      const editingWorkoutId = workoutEntry.editingWorkoutId;
       const workout = {
-        id: createId(),
+        id: editingWorkoutId || createId(),
         date: workoutEntry.date,
         cycleId: current.activeCycleId,
         splitId: workoutEntry.splitId,
@@ -207,9 +228,28 @@ function App() {
         reason: workoutEntry.extenuating ? workoutEntry.reason || 'Extenuating factor' : '',
         sets,
       };
-      const analysis = analyzeWorkoutStrength(workout, current.workouts, current);
+      const matchingWorkout = current.workouts.find(
+        (item) =>
+          item.id !== workout.id &&
+          item.date === workout.date &&
+          ((item.splitId && item.splitId === workout.splitId) || (!item.splitId && item.splitName === workout.splitName)),
+      );
+      const mergedWorkout = matchingWorkout
+        ? {
+            ...matchingWorkout,
+            date: workout.date,
+            cycleId: workout.cycleId,
+            splitId: workout.splitId,
+            splitName: workout.splitName,
+            extenuating: matchingWorkout.extenuating || workout.extenuating,
+            reason: mergeWorkoutReasons(matchingWorkout.reason, workout.reason),
+            sets: [...matchingWorkout.sets, ...workout.sets],
+          }
+        : workout;
+      const comparisonWorkouts = current.workouts.filter((item) => item.id !== mergedWorkout.id && item.id !== workout.id);
+      const analysis = analyzeWorkoutStrength(mergedWorkout, comparisonWorkouts, current);
       const analyzedWorkout = {
-        ...workout,
+        ...mergedWorkout,
         strengthFlag: analysis.workoutFlag,
         strengthSummary: {
           comparedExerciseCount: analysis.comparedExerciseCount,
@@ -225,7 +265,7 @@ function App() {
       };
       return {
         ...current,
-        workouts: [analyzedWorkout, ...current.workouts],
+        workouts: [analyzedWorkout, ...comparisonWorkouts].sort((a, b) => b.date.localeCompare(a.date)),
       };
     });
     setWorkoutEntry((entry) => ({
@@ -233,8 +273,59 @@ function App() {
       date: today,
       extenuating: false,
       reason: '',
+      editingWorkoutId: null,
       sets: [newWorkoutSet(entry.sets[0]?.exercise || allExercises[0])],
     }));
+  }
+
+  function editWorkout(workout) {
+    const fallbackSplit = state.splits.find((split) => split.name === workout.splitName) || state.splits[0];
+    const splitId = state.splits.some((split) => split.id === workout.splitId) ? workout.splitId : fallbackSplit?.id || '';
+    setActiveTab('workout');
+    setWorkoutEntry({
+      date: workout.date,
+      splitId,
+      extenuating: Boolean(workout.extenuating),
+      reason: workout.reason || '',
+      editingWorkoutId: workout.id,
+      sets: workout.sets.map((set) => ({
+        id: createId(),
+        exercise: set.exercise,
+        weight: displayFromPounds(Number(set.weight), state.unit),
+        reps: String(set.reps ?? ''),
+        rir: set.rir === null || set.rir === undefined ? '' : String(set.rir),
+      })),
+    });
+  }
+
+  function cancelWorkoutEdit() {
+    setWorkoutEntry((entry) => ({
+      ...entry,
+      date: today,
+      extenuating: false,
+      reason: '',
+      editingWorkoutId: null,
+      sets: [newWorkoutSet(entry.sets[0]?.exercise || allExercises[0])],
+    }));
+  }
+
+  function deleteWorkout(workoutId) {
+    const workout = state.workouts.find((item) => item.id === workoutId);
+    if (!workout) return;
+
+    updateState((current) => ({
+      ...current,
+      workouts: current.workouts.filter((item) => item.id !== workoutId),
+    }));
+    if (workoutEntry.editingWorkoutId === workoutId) {
+      cancelWorkoutEdit();
+    }
+    showUndo(`Deleted ${workout.splitName} on ${workout.date}`, () => {
+      updateState((current) => ({
+        ...current,
+        workouts: [workout, ...current.workouts.filter((item) => item.id !== workout.id)].sort((a, b) => b.date.localeCompare(a.date)),
+      }));
+    });
   }
 
   function addSplitExercise() {
@@ -281,6 +372,7 @@ function App() {
         ...current,
         bodyWeights: current.bodyWeights.filter((entry) => !entry.mock),
         workouts: current.workouts.filter((entry) => !entry.mock),
+        calorieEntries: (current.calorieEntries || []).filter((entry) => !entry.mock),
         cycles,
         activeCycleId: cycles.find((cycle) => !cycle.archived)?.id || cycles[0].id,
         hasMockData: false,
@@ -312,6 +404,7 @@ function App() {
       splitId: nextSplits[0]?.id || '',
       extenuating: false,
       reason: '',
+      editingWorkoutId: null,
       sets: [newWorkoutSet(exerciseName(nextSplits[0]?.exercises[0]) || commonExercises[0])],
     });
     setExerciseScope({ mode: 'all', splitId: nextSplits[0]?.id || '' });
@@ -436,8 +529,8 @@ function App() {
         <div className="topbar-insights" aria-label="Current tracker summary">
           {!isLiftOnly && (
             <div>
-              <span>Daily target</span>
-              <strong>{state.calories || 'Set target'}</strong>
+              <span>{intakeAverage ? '7-day intake' : 'Daily target'}</span>
+              <strong>{intakeAverage ? Math.round(intakeAverage.average).toLocaleString() : state.calories || 'Set target'}</strong>
             </div>
           )}
           <div>
@@ -488,7 +581,7 @@ function App() {
           {[
             ['dashboard', BarChart3, 'Dashboard'],
             ['workout', Dumbbell, 'Workout'],
-            ...(!isLiftOnly ? [['weight', Scale, 'Weight']] : []),
+            ...(!isLiftOnly ? [['weight', Scale, 'Body']] : []),
             ['splits', CalendarDays, 'Splits'],
             ['settings', Settings, 'Settings'],
           ].map(([id, Icon, label]) => (
@@ -511,6 +604,8 @@ function App() {
             state={state}
             strengthAlerts={strengthAlerts}
             trend={trend}
+            intakeAverage={intakeAverage}
+            todayCalories={todayCalories}
             trackingMode={state.trackingMode}
             clearMockData={clearMockData}
             updateCalories={(calories) => updateState((current) => ({ ...current, calories }))}
@@ -521,6 +616,9 @@ function App() {
         {activeTab === 'workout' && (
           <WorkoutView
             addSet={addSet}
+            cancelWorkoutEdit={cancelWorkoutEdit}
+            deleteWorkout={deleteWorkout}
+            editWorkout={editWorkout}
             saveWorkout={saveWorkout}
             selectedSplitExercises={selectedSplitExercises}
             setWorkoutEntry={setWorkoutEntry}
@@ -531,7 +629,17 @@ function App() {
         )}
 
         {activeTab === 'weight' && (
-          <WeightView addWeight={addWeight} setWeightEntry={setWeightEntry} state={state} weightEntry={weightEntry} />
+          <WeightView
+            addCalories={addCalories}
+            addWeight={addWeight}
+            calorieEntry={calorieEntry}
+            intakeAverage={intakeAverage}
+            todayCalories={todayCalories}
+            setCalorieEntry={setCalorieEntry}
+            setWeightEntry={setWeightEntry}
+            state={state}
+            weightEntry={weightEntry}
+          />
         )}
 
         {activeTab === 'splits' && (
@@ -560,6 +668,11 @@ function App() {
 
 function newWorkoutSet(exercise) {
   return { id: createId(), exercise: exerciseName(exercise) || exercise, weight: '', reps: '', rir: '' };
+}
+
+function mergeWorkoutReasons(firstReason, secondReason) {
+  const reasons = [firstReason, secondReason].map((reason) => reason?.trim()).filter(Boolean);
+  return [...new Set(reasons)].join('; ');
 }
 
 export default App;

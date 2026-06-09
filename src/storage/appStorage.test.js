@@ -10,6 +10,7 @@ describe('saved tracker state normalization', () => {
       calories: '2700',
       cycles: [{ id: 'cycle-1' }],
       splits: [{ id: 'upper-a', name: 'Upper A', exercises: ['Bench Press'] }],
+      calorieEntries: [{ date: '2026-06-08', calories: '2650' }],
     });
 
     expect(state).toMatchObject({
@@ -21,6 +22,7 @@ describe('saved tracker state normalization', () => {
       activeCycleId: 'cycle-1',
       customExercises: [],
       bodyWeights: [],
+      calorieEntries: [{ date: '2026-06-08', calories: 2650, mock: false }],
       workouts: [],
     });
   });

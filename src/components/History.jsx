@@ -1,8 +1,8 @@
 import React from 'react';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Pencil, Trash2 } from 'lucide-react';
 import { formatWeight } from '../utils/units';
 
-function History({ workouts, unit }) {
+function History({ onDeleteWorkout, onEditWorkout, workouts, unit }) {
   return (
     <section className="panel">
       <div className="panel-title">
@@ -13,7 +13,7 @@ function History({ workouts, unit }) {
       <div className="history-list">
         {workouts.map((workout) => (
           <article className="history-row" key={workout.id}>
-            <div>
+            <div className="history-meta">
               <strong>{workout.splitName}</strong>
               <span>{workout.date}</span>
               {workout.extenuating && <em>{workout.reason}</em>}
@@ -35,6 +35,14 @@ function History({ workouts, unit }) {
                   {workout.setStrengthFlags?.[index]?.belowRepRange && <b className="set-strength range">Below range</b>}
                 </span>
               ))}
+            </div>
+            <div className="history-actions" aria-label={`${workout.splitName} workout actions`}>
+              <button className="icon-only" title="Edit workout" onClick={() => onEditWorkout?.(workout)}>
+                <Pencil size={17} />
+              </button>
+              <button className="icon-only danger-icon" title="Delete workout" onClick={() => onDeleteWorkout?.(workout.id)}>
+                <Trash2 size={17} />
+              </button>
             </div>
           </article>
         ))}
