@@ -4822,3 +4822,9 @@ video {
     max-height: 280px;
   }
 }
+
+/* Keep dashboard wide panels aligned after older alternating panel-width rules. */
+.dashboard-grid > .panel.wide {
+  width: 100%;
+  margin-left: 0;
+}
